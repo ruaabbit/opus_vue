@@ -91,7 +91,7 @@ let intervalId
 onMounted(() => {
   intervalId = setInterval(() => {
     nextImage()
-  }, 3000)
+  }, 1000)
 })
 
 onBeforeUnmount(() => {
