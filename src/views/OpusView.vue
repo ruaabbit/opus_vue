@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Arctic Sea Ice Prediction Results</h1>
-    <nav class="mb-4">
+    <h1 class="text-2xl font-bold mb-4 text-center">Arctic Sea Ice Prediction Results</h1>
+    <nav class="mb-4 text-center">
       <button @click="selectedYear = '2019'" :class="buttonClass('2019')">2019</button>
       <button @click="selectedYear = '2020'" :class="buttonClass('2020')">2020</button>
     </nav>
