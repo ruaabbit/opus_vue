@@ -13,14 +13,14 @@
     <div class="flex justify-center mt-4">
       <button
         @click="prevImage"
-        class="px-4 py-2 mr-2 bg-gray-200 text-black disabled:bg-gray-400 disabled:cursor-not-allowed"
+        class="px-4 py-2 mr-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         :disabled="currentImageIndex === 0"
       >
         Previous
       </button>
       <button
         @click="nextImage"
-        class="px-4 py-2 ml-2 bg-gray-200 text-black disabled:bg-gray-400 disabled:cursor-not-allowed"
+        class="px-4 py-2 ml-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         :disabled="currentImageIndex === props.images.length - 1"
       >
         Next
