@@ -10,12 +10,6 @@ defineProps({
 <template>
   <div class="greetings">
     <h1 class="green">{{ msg }}</h1>
-    <h3>
-      Supported by
-      <a href="https://vitejs.dev/" target="_blank" rel="noopener">Vite</a> +
-      <a href="https://vuejs.org/" target="_blank" rel="noopener">Vue 3</a> +
-      <a href="https://tailwindcss.com/" target="_blank" rel="noopener">Tailwind</a>.
-    </h3>
   </div>
 </template>
 

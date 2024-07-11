@@ -4,7 +4,7 @@
       <img
         :src="currentImage.path"
         alt="Arctic Sea Ice Prediction"
-        class="cursor-pointer"
+        class="cursor-pointer min-w-[600px]"
         @click="viewImage(currentImage)"
       />
     </div>
