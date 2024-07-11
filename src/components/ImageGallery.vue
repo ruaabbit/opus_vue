@@ -29,10 +29,18 @@
 
     <div
       v-if="selectedImage"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 image-zoom"
+      @wheel="handleWheel"
     >
-      <div class="relative max-w-full max-h-full">
-        <img :src="selectedImage.path" alt="Large view" class="max-w-full max-h-full" />
+      <div
+        class="relative flex flex-col items-center justify-center max-w-full max-h-full transform-transition"
+        :style="transformStyle"
+      >
+        <img
+          :src="selectedImage.path"
+          alt="Large view"
+          class="max-w-full max-h-full transition-transform duration-300"
+        />
         <p class="absolute top-2 left-2 text-white bg-gray-900 px-2 rounded">
           {{ selectedImage.date }}
         </p>
@@ -70,9 +78,21 @@ const props = defineProps({
 const selectedImage = ref(null)
 const currentImageIndex = ref(0)
 const currentImage = ref(props.images[currentImageIndex.value])
+const scale = ref(1) // 新增状态变量来存储缩放级别
+const transformStyle = ref('') // 用于动态绑定样式
 
 const viewImage = (image) => {
   selectedImage.value = image
+  scale.value = 1 // 重置缩放级别
+}
+
+const handleWheel = (event) => {
+  const delta = Math.max(-1, Math.min(1, event.deltaY))
+  scale.value -= delta * 0.1 // 根据滚轮滚动调整缩放级别
+
+  // 更新 transform 样式
+  transformStyle.value = `transform: scale(${scale.value})`
+  event.preventDefault() // 阻止默认滚动行为
 }
 
 const nextImage = () => {
@@ -128,5 +148,15 @@ watch(
 .focus\:bg-gray-700:focus {
   --tw-bg-opacity: 1;
   background-color: rgba(55, 65, 81, var(--tw-bg-opacity));
+}
+
+.image-zoom {
+  overflow: hidden; /* 防止内容溢出 */
+  touch-action: none; /* 防止触摸操作被浏览器默认行为干扰 */
+}
+
+.transform-transition {
+  transform-origin: center center;
+  transition: transform 0.1s ease;
 }
 </style>

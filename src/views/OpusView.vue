@@ -1,7 +1,7 @@
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4 text-center">Arctic Sea Ice Prediction Results</h1>
-    <nav class="mb-4 text-center">
+  <div class="container mx-auto p-8">
+    <h1 class="text-4xl font-bold mb-8 text-center">Arctic Sea Ice Prediction Results</h1>
+    <nav class="mb-8 text-center">
       <button @click="selectedYear = '2019'" :class="buttonClass('2019')">2019</button>
       <button @click="selectedYear = '2020'" :class="buttonClass('2020')">2020</button>
     </nav>
@@ -41,7 +41,7 @@ const images2020 = generateImagePaths('2020', '2020-09-15', '2020-09-28')
 
 const buttonClass = (year) => {
   return selectedYear.value === year
-    ? 'bg-blue-500 dark:bg-blue-200 text-white px-4 py-2 mr-2'
-    : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white px-4 py-2 mr-2'
+    ? 'bg-blue-500 dark:bg-blue-200 text-white px-4 py-4 mr-4'
+    : 'bg-gray-200 dark:bg-gray-700 text-black dark:text-white px-4 py-4 mr-4'
 }
 </script>
