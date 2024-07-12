@@ -1,30 +1,49 @@
 <template>
-  <div class="flex flex-col items-center">
+  <div class="flex flex-col items-center space-y-4">
     <div class="flex justify-center items-center">
       <img
         :src="currentImage.path"
         alt="Arctic Sea Ice Prediction"
-        class="cursor-pointer min-w-[600px]"
+        class="cursor-pointer min-w-[600px] max-w-full"
         @click="viewImage(currentImage)"
       />
     </div>
     <p class="mt-2 text-center">{{ currentImage.date }}</p>
 
-    <div class="flex justify-center mt-4">
+    <div class="grid grid-cols-3 gap-4 mt-4">
       <button
         @click="prevImage"
-        class="px-4 py-2 mr-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+        class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         :disabled="currentImageIndex === 0"
       >
-        Previous
+        上一日
+      </button>
+      <button
+        @click="togglePause"
+        class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white"
+      >
+        {{ isPaused ? '点击继续' : '点击暂停' }}
       </button>
       <button
         @click="nextImage"
-        class="px-4 py-2 ml-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+        class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         :disabled="currentImageIndex === props.images.length - 1"
       >
-        Next
+        下一日
       </button>
+    </div>
+
+    <div class="w-full px-4 mt-4">
+      <input
+        id="intervalRange"
+        type="range"
+        min="1"
+        max="3"
+        step="0.1"
+        v-model="interval"
+        class="w-full mt-2"
+      />
+      <label for="intervalRange" class="block text-center mt-2">轮播间隔: {{ interval }}s</label>
     </div>
 
     <div
@@ -78,21 +97,22 @@ const props = defineProps({
 const selectedImage = ref(null)
 const currentImageIndex = ref(0)
 const currentImage = ref(props.images[currentImageIndex.value])
-const scale = ref(1) // 新增状态变量来存储缩放级别
-const transformStyle = ref('') // 用于动态绑定样式
+const scale = ref(1)
+const transformStyle = ref('')
+const interval = ref(1) // 轮播间隔时间（秒）
+const isPaused = ref(false) // 轮播暂停状态
 
 const viewImage = (image) => {
   selectedImage.value = image
-  scale.value = 1 // 重置缩放级别
+  scale.value = 1
 }
 
 const handleWheel = (event) => {
   const delta = Math.max(-1, Math.min(1, event.deltaY))
-  scale.value -= delta * 0.1 // 根据滚轮滚动调整缩放级别
+  scale.value -= delta * 0.1
 
-  // 更新 transform 样式
   transformStyle.value = `transform: scale(${scale.value})`
-  event.preventDefault() // 阻止默认滚动行为
+  event.preventDefault()
 }
 
 const nextImage = () => {
@@ -108,10 +128,21 @@ const prevImage = () => {
 
 let intervalId
 
-onMounted(() => {
+const startInterval = () => {
+  clearInterval(intervalId)
   intervalId = setInterval(() => {
-    nextImage()
-  }, 1000)
+    if (!isPaused.value) {
+      nextImage()
+    }
+  }, interval.value * 1000)
+}
+
+const togglePause = () => {
+  isPaused.value = !isPaused.value
+}
+
+onMounted(() => {
+  startInterval()
 })
 
 onBeforeUnmount(() => {
@@ -125,6 +156,10 @@ watch(
     currentImage.value = newImages[currentImageIndex.value]
   }
 )
+
+watch(interval, () => {
+  startInterval()
+})
 </script>
 
 <style scoped>
@@ -151,8 +186,8 @@ watch(
 }
 
 .image-zoom {
-  overflow: hidden; /* 防止内容溢出 */
-  touch-action: none; /* 防止触摸操作被浏览器默认行为干扰 */
+  overflow: hidden;
+  touch-action: none;
 }
 
 .transform-transition {
