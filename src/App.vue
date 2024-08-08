@@ -1,79 +1,50 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
-  <header class="max-h-screen leading-normal">
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="Learn to walk before you run." />
-      <nav>
-        <RouterLink to="/">Opus</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
+  <div class="flex flex-col h-screen">
+    <!-- Top Header -->
+    <header class="bg-[#001a54] text-white flex flex-row items-center justify-between p-4">
+      <img alt="logo_04" class="h-12" src="@/assets/logo_04.png" />
+      <div class="flex flex-col items-center">
+        <h1 class="text-2xl font-bold">北极海冰预测结果</h1>
+        <p class="text-lg">Arctic Sea Ice Prediction Results</p>
+      </div>
+      <div class="w-12"></div>
+      <div class="flex-none">
+        <a
+          href="https://kmrvyozrlx.k.topthink.com/@oucaigroup/readme.html"
+          target="_blank"
+          class="text-white hover:text-gray-300"
+          >关于我们</a
+        >
+      </div>
+    </header>
+    <hr class="border-t-2 border-gray-700 w-full" />
+    <div class="flex flex-1">
+      <!-- Sidebar Navigation -->
+      <nav class="bg-[#001a54] text-white w-40 flex flex-col space-y-4 p-4">
+        <RouterLink to="/" class="hover:text-gray-300" active-class="text-yellow-300"
+          >Opus</RouterLink
+        >
+        <RouterLink to="/1" class="hover:text-gray-300" active-class="text-yellow-300"
+          >Test</RouterLink
+        >
+        <RouterLink to="/2" class="hover:text-gray-300" active-class="text-yellow-300"
+          >Test</RouterLink
+        >
+        <RouterLink to="/3" class="hover:text-gray-300" active-class="text-yellow-300"
+          >Test</RouterLink
+        >
+        <RouterLink to="/4" class="hover:text-gray-300" active-class="text-yellow-300"
+          >Test</RouterLink
+        >
       </nav>
+      <!-- Main Content -->
+      <main class="flex-1 p-4">
+        <RouterView />
+      </main>
     </div>
-  </header>
-
-  <RouterView />
+  </div>
 </template>
-
-<style scoped>
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-</style>

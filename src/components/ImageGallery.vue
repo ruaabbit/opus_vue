@@ -1,14 +1,20 @@
 <template>
-  <div class="flex flex-col items-center space-y-4">
-    <div class="flex justify-center items-center">
+  <div class="flex flex-col items-center">
+    <p class="mt-2 text-center text-5xl">{{ currentImage.date }}</p>
+
+    <div class="relative flex justify-center items-center">
       <img
         :src="currentImage.path"
         alt="Arctic Sea Ice Prediction"
-        class="cursor-pointer min-w-[600px] max-w-full"
+        class="cursor-pointer min-w-[450px] max-w-full"
         @click="viewImage(currentImage)"
+        @mouseover="showTooltip = true"
+        @mouseleave="showTooltip = false"
       />
+      <div v-if="showTooltip" class="absolute bottom-0 mb-2 px-2 py-1 text-white bg-black rounded">
+        点击图片可以放大查看
+      </div>
     </div>
-    <p class="mt-2 text-center">{{ currentImage.date }}</p>
 
     <div class="grid grid-cols-3 gap-4 mt-4">
       <button
@@ -50,6 +56,7 @@
       v-if="selectedImage"
       class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 image-zoom"
       @wheel="handleWheel"
+      @click.self="selectedImage = null"
     >
       <div
         class="relative flex flex-col items-center justify-center max-w-full max-h-full transform-transition"
@@ -63,26 +70,26 @@
         <p class="absolute top-2 left-2 text-white bg-gray-900 px-2 rounded">
           {{ selectedImage.date }}
         </p>
-        <button
-          @click="selectedImage = null"
-          class="absolute top-2 right-2 text-white bg-gray-900 p-2 rounded-full hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            ></path>
-          </svg>
-        </button>
       </div>
+      <button
+        @click="selectedImage = null"
+        class="fixed top-2 right-2 text-white bg-gray-900 p-2 rounded-full hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
+      >
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </button>
     </div>
   </div>
 </template>
@@ -101,6 +108,7 @@ const scale = ref(1)
 const transformStyle = ref('')
 const interval = ref(1) // 轮播间隔时间（秒）
 const isPaused = ref(false) // 轮播暂停状态
+const showTooltip = ref(false) // 工具提示的显示状态
 
 const viewImage = (image) => {
   selectedImage.value = image
