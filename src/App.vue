@@ -26,19 +26,37 @@ import { RouterLink, RouterView } from 'vue-router'
       <!-- Sidebar Navigation -->
       <nav class="bg-[#001a54] text-white w-40 flex flex-col space-y-4 p-4">
         <RouterLink to="/" class="hover:text-gray-300" active-class="text-yellow-300"
-          >Opus</RouterLink
+          >实时逐日预报</RouterLink
         >
-        <RouterLink to="/1" class="hover:text-gray-300" active-class="text-yellow-300"
-          >Test</RouterLink
+        <RouterLink
+          to="/real-time-monthly-forecast"
+          class="hover:text-gray-300"
+          active-class="text-yellow-300"
+          >实时逐月预报</RouterLink
         >
-        <RouterLink to="/2" class="hover:text-gray-300" active-class="text-yellow-300"
-          >Test</RouterLink
+        <RouterLink
+          to="/daily-forecast-predict"
+          class="hover:text-gray-300"
+          active-class="text-yellow-300"
+          >逐日预报测试</RouterLink
         >
-        <RouterLink to="/3" class="hover:text-gray-300" active-class="text-yellow-300"
-          >Test</RouterLink
+        <RouterLink
+          to="/monthly-forecast-predict"
+          class="hover:text-gray-300"
+          active-class="text-yellow-300"
+          >逐月预报测试</RouterLink
         >
-        <RouterLink to="/4" class="hover:text-gray-300" active-class="text-yellow-300"
-          >Test</RouterLink
+        <RouterLink
+          to="/uncertainty-analysis"
+          class="hover:text-gray-300"
+          active-class="text-yellow-300"
+          >不确定性分析</RouterLink
+        >
+        <RouterLink
+          to="/dynamics-analysis"
+          class="hover:text-gray-300"
+          active-class="text-yellow-300"
+          >动力学分析</RouterLink
         >
       </nav>
       <!-- Main Content -->
