@@ -22,7 +22,7 @@
         class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         :disabled="currentImageIndex === 0"
       >
-        上一日
+        上一张
       </button>
       <button
         @click="togglePause"
@@ -35,7 +35,7 @@
         class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-black dark:text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
         :disabled="currentImageIndex === props.images.length - 1"
       >
-        下一日
+        下一张
       </button>
     </div>
 
@@ -49,7 +49,7 @@
         v-model="interval"
         class="w-full mt-2"
       />
-      <label for="intervalRange" class="block text-center mt-2">轮播间隔: {{ interval }}s</label>
+      <label for="intervalRange" class="block text-center mt-2">切换速度: {{ interval }}s</label>
     </div>
 
     <div

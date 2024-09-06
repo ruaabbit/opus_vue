@@ -1,54 +1,82 @@
 <template>
-    <div class="container mx-auto flex max-h-screen">
-      <div class="flex flex-col items-end w-full">
-        <!-- 导航栏,使用flex布局将按钮放置在右上角 -->
-        <div class="flex space-x-2">
-          <button @click="selectedYear = '2019'" :class="getClass('2019')">2019</button>
-          <button @click="selectedYear = '2020'" :class="getClass('2020')">2020</button>
-        </div>
-        <!-- 图片画廊根据选择的年份显示 -->
-        <div class="flex items-center justify-center w-full">
-          <div v-if="selectedYear === '2019'">
-            <ImageGallery :images="images2019" />
-          </div>
-          <div v-else-if="selectedYear === '2020'">
-            <ImageGallery :images="images2020" />
-          </div>
-        </div>
-      </div>
+  <div class="container mx-auto flex flex-col items-center max-h-screen p-4 space-y-4">
+    <!-- 返回按钮，预测结果展示时显示 -->
+    <el-button v-if="showResults" class="self-start" type="default" @click="handleBack"
+      >返回</el-button
+    >
+
+    <!-- 表单内容，未提交时显示 -->
+    <div v-if="!showResults" class="space-y-4">
+      <!-- 图片上传组件 -->
+      <el-upload
+        class="upload-demo"
+        drag
+        action=""
+        :auto-upload="false"
+        :on-change="handleUploadChange"
+      >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">拖拽文件到此处，或点击上传</div>
+        <div class="el-upload__tip">仅支持PNG文件</div>
+      </el-upload>
+
+      <!-- 月份选择组件 -->
+      <el-date-picker v-model="selectedMonth" type="month" placeholder="选择月份" />
+
+      <!-- 提交按钮 -->
+      <el-button type="primary" @click="handleSubmit">提交</el-button>
     </div>
-  </template>
-  <script setup>
-  import { ref } from 'vue'
-  import ImageGallery from '../components/ImageGallery.vue'
-  
-  const selectedYear = ref('2019')
-  
-  const generateImagePaths = (year, startDate, endDate) => {
-    const images = []
-    let currentDate = new Date(startDate)
-  
-    while (currentDate <= new Date(endDate)) {
-      const dateStr = currentDate.toISOString().slice(0, 10).replace(/-/g, '')
-      images.push({
-        path: `picture/arctic-sea-ice/${year}0915-${year}0928/${dateStr}.png`,
-        date: currentDate.toISOString().slice(0, 10)
-      })
-      currentDate.setDate(currentDate.getDate() + 1)
-    }
-  
-    return images
+
+    <!-- 图片展示，提交后显示 -->
+    <div v-if="showResults" class="flex items-center justify-center w-full">
+      <div v-if="images.length">
+        <ImageGallery :images="images" />
+      </div>
+      <div v-else class="text-center text-gray-500">请上传图片并选择月份以查看预测结果</div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import ImageGallery from '../components/ImageGallery.vue'
+import { useMonthPrediction } from '@/common/date'
+
+const selectedMonth = ref(null)
+const images = ref([])
+const showResults = ref(false)
+
+const handleUploadChange = (file) => {
+  const allowedTypes = ['image/png']
+  if (!allowedTypes.includes(file.raw.type)) {
+    ElMessage.error('仅支持PNG文件')
+    return
   }
-  
-  const images2019 = generateImagePaths('2019', '2019-09-15', '2019-09-28')
-  const images2020 = generateImagePaths('2020', '2020-09-15', '2020-09-28')
-  
-  const getClass = (year) => {
-    return {
-      'bg-blue-500 text-white': selectedYear.value === year,
-      'bg-gray-200 text-gray-800': selectedYear.value !== year,
-      'px-4 py-2 transition duration-150 ease-in-out': true
-    }
+  ElMessage.success('上传成功')
+}
+
+const handleSubmit = () => {
+  if (selectedMonth.value) {
+    const startYear = selectedMonth.value.getFullYear()
+    const startMonth = selectedMonth.value.getMonth()
+
+    images.value = useMonthPrediction(startYear, startMonth)
+    showResults.value = true // 显示预测结果
+  } else {
+    ElMessage.error('请选择月份')
   }
-  </script>
-  
+}
+
+const handleBack = () => {
+  showResults.value = false
+  images.value = []
+  selectedMonth.value = null
+}
+</script>
+
+<style scoped>
+.container {
+  max-width: 800px;
+}
+</style>
