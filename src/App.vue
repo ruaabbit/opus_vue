@@ -8,8 +8,8 @@ import { RouterLink, RouterView } from 'vue-router'
     <header class="bg-[#001a54] text-white flex flex-row items-center justify-between p-4">
       <img alt="logo_04" class="h-12" src="@/assets/logo_04.png" />
       <div class="flex flex-col items-center">
-        <h1 class="text-2xl font-bold">北极海冰预测结果</h1>
-        <p class="text-lg">Arctic Sea Ice Prediction Results</p>
+        <h1 class="text-2xl font-bold">北极海冰时空多尺度预报基础模型 MetaICE</h1>
+        <p class="text-lg">MetaICE: Fundamental Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting</p>
       </div>
       <div class="w-12"></div>
       <div class="flex-none">
