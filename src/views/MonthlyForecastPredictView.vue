@@ -61,7 +61,12 @@ const handleSubmit = () => {
     const startYear = selectedMonth.value.getFullYear()
     const startMonth = selectedMonth.value.getMonth()
 
+    // useMonthPrediction(startYear, startMonth).then((res) => {
+    //   images.value = res
+    // })
+
     images.value = useMonthPrediction(startYear, startMonth)
+
     showResults.value = true // 显示预测结果
   } else {
     ElMessage.error('请选择月份')

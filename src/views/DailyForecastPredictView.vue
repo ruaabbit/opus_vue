@@ -60,6 +60,10 @@ const handleUploadChange = (file) => {
 const handleSubmit = () => {
   if (selectedDate.value) {
     const startDate = selectedDate.value.toLocaleDateString().slice(0, 10)
+    // useDayPrediction(startDate).then((res) => {
+    //   images.value = res
+    // })
+
     images.value = useDayPrediction(startDate)
     showResults.value = true // 显示预测结果
   } else {

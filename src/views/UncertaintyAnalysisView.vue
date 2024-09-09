@@ -1,53 +1,48 @@
 <template>
-  <div class="container mx-auto flex max-h-screen">
-    <div class="flex flex-col items-end w-full">
-      <!-- 导航栏,使用flex布局将按钮放置在右上角 -->
-      <div class="flex space-x-2">
-        <button @click="selectedYear = '2019'" :class="getClass('2019')">2019</button>
-        <button @click="selectedYear = '2020'" :class="getClass('2020')">2020</button>
-      </div>
-      <!-- 图片画廊根据选择的年份显示 -->
-      <div class="flex items-center justify-center w-full">
-        <div v-if="selectedYear === '2019'">
-          <ImageGallery :images="images2019" />
-        </div>
-        <div v-else-if="selectedYear === '2020'">
-          <ImageGallery :images="images2020" />
-        </div>
-      </div>
-    </div>
+  <div class="flex flex-wrap justify-center bg-black h-[85vh]">
+    <GlobeChart
+      :baseTexture="'picture/test/world.topo.bathy.200401.jpg'"
+      :heightTexture="'picture/test/bathymetry_bw_composite_4k.jpg'"
+      :environment="'picture/test/starfield.jpg'"
+      :lightIntensity="5"
+      :autoRotate="true"
+      :targetCoord="[30, 60]"
+      :alpha="45"
+      :beta="10"
+      :distance="200"
+      :series="linesData"
+    />
   </div>
 </template>
+
 <script setup>
-import { ref } from 'vue'
-import ImageGallery from '../components/ImageGallery.vue'
+import GlobeChart from '../components/GlobeChart.vue'
 
-const selectedYear = ref('2019')
-
-const generateImagePaths = (year, startDate, endDate) => {
-  const images = []
-  let currentDate = new Date(startDate)
-
-  while (currentDate <= new Date(endDate)) {
-    const dateStr = currentDate.toISOString().slice(0, 10).replace(/-/g, '')
-    images.push({
-      path: `picture/arctic-sea-ice/${year}0915-${year}0928/${dateStr}.png`,
-      date: currentDate.toISOString().slice(0, 10)
-    })
-    currentDate.setDate(currentDate.getDate() + 1)
+const linesData = [
+  {
+    type: 'lines3D',
+    blendMode: 'lighter',
+    coordinateSystem: 'globe',
+    effect: {
+      show: true,
+      trailWidth: 4,
+      trailOpacity: 0.5,
+      trailLength: 0.2,
+      constantSpeed: 5
+    },
+    lineStyle: {
+      width: 2.0,
+      color: 'green',
+      opacity: 0.8
+    },
+    data: [
+      {
+        coords: [
+          [116.46, 39.92], // Beijing coordinates
+          [-74.0, 40.71] // New York coordinates
+        ]
+      }
+    ]
   }
-
-  return images
-}
-
-const images2019 = generateImagePaths('2019', '2019-09-15', '2019-09-28')
-const images2020 = generateImagePaths('2020', '2020-09-15', '2020-09-28')
-
-const getClass = (year) => {
-  return {
-    'bg-blue-500 text-white': selectedYear.value === year,
-    'bg-gray-200 text-gray-800': selectedYear.value !== year,
-    'px-4 py-2 transition duration-150 ease-in-out': true
-  }
-}
+]
 </script>
