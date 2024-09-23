@@ -15,15 +15,15 @@ import { ref, provide } from 'vue'
 const props = defineProps({
   baseTexture: {
     type: String,
-    default: 'picture/test/world.topo.bathy.200401.jpg'
+    default: 'picture/globe-texture/world.topo.bathy.200401.jpg'
   },
   heightTexture: {
     type: String,
-    default: 'picture/test/bathymetry_bw_composite_4k.jpg'
+    default: 'picture/globe-texture/bathymetry_bw_composite_4k.jpg'
   },
   environment: {
     type: String,
-    default: 'picture/test/starfield.jpg'
+    default: 'picture/globe-texture/starfield.jpg'
   },
   lightIntensity: {
     type: Number,

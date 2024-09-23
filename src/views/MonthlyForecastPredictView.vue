@@ -41,7 +41,7 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import ImageGallery from '../components/ImageGallery.vue'
-import { useMonthPrediction } from '@/common/date'
+import { useMonthPrediction } from '@/common/api'
 
 const selectedMonth = ref(null)
 const images = ref([])
@@ -61,11 +61,11 @@ const handleSubmit = () => {
     const startYear = selectedMonth.value.getFullYear()
     const startMonth = selectedMonth.value.getMonth()
 
-    // useMonthPrediction(startYear, startMonth).then((res) => {
-    //   images.value = res
-    // })
+    useMonthPrediction(startYear, startMonth).then((res) => {
+      images.value = res
+    })
 
-    images.value = useMonthPrediction(startYear, startMonth)
+    // images.value = useMonthPrediction(startYear, startMonth)
 
     showResults.value = true // 显示预测结果
   } else {

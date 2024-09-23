@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-wrap justify-center bg-black h-[85vh]">
     <GlobeChart
-      :baseTexture="'picture/test/world.topo.bathy.200401.jpg'"
-      :heightTexture="'picture/test/bathymetry_bw_composite_4k.jpg'"
-      :environment="'picture/test/starfield.jpg'"
+      :baseTexture="'picture/globe-texture/world.topo.bathy.200401.jpg'"
+      :heightTexture="'picture/globe-texture/bathymetry_bw_composite_4k.jpg'"
+      :environment="'picture/globe-texture/starfield.jpg'"
       :lightIntensity="5"
       :autoRotate="true"
       :targetCoord="[30, 60]"

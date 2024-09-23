@@ -18,10 +18,10 @@ provide(THEME_KEY, 'dark')
 
 const option = ref({
   globe: {
-    baseTexture: 'picture/test/world.topo.bathy.200401.jpg', // Earth texture
-    heightTexture: 'picture/test/bathymetry_bw_composite_4k.jpg', // Heightmap texture for terrain
+    baseTexture: 'picture/globe-texture/world.topo.bathy.200401.jpg', // Earth texture
+    heightTexture: 'picture/globe-texture/bathymetry_bw_composite_4k.jpg', // Heightmap texture for terrain
     shading: 'color', // Realistic shading for the 3D effect
-    environment: 'picture/test/starfield.jpg', // Space background
+    environment: 'picture/globe-texture/starfield.jpg', // Space background
     realisticMaterial: {
       roughness: 0.9
     },

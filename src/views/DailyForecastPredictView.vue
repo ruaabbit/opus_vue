@@ -42,7 +42,7 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import ImageGallery from '@/components/ImageGallery.vue'
 
-import { useDayPrediction } from '@/common/date'
+import { useDayPrediction } from '@/common/api'
 
 const selectedDate = ref(null)
 const images = ref([])
@@ -60,11 +60,11 @@ const handleUploadChange = (file) => {
 const handleSubmit = () => {
   if (selectedDate.value) {
     const startDate = selectedDate.value.toLocaleDateString().slice(0, 10)
-    // useDayPrediction(startDate).then((res) => {
-    //   images.value = res
-    // })
+    useDayPrediction(startDate).then((res) => {
+      images.value = res
+    })
 
-    images.value = useDayPrediction(startDate)
+    // images.value = useDayPrediction(startDate)
     showResults.value = true // 显示预测结果
   } else {
     ElMessage.error('请选择日期')
