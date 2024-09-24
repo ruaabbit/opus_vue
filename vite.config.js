@@ -4,9 +4,9 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 // import AutoImport from 'unplugin-auto-import/vite'
-// import Components from 'unplugin-vue-components/vite'
+import Components from 'unplugin-vue-components/vite'
 // import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-
+import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers';
 // import viteCompression from 'vite-plugin-compression'
 
 
@@ -18,9 +18,13 @@ export default defineConfig({
     // AutoImport({
     //   resolvers: [ElementPlusResolver()],
     // }),
-    // Components({
-    //   resolvers: [ElementPlusResolver()],
-    // }),
+    Components({
+      resolvers: [
+        // ElementPlusResolver(),
+        AntDesignVueResolver({
+          importStyle: false, // css in js
+        }),],
+    }),
     // viteCompression({
     //   filter: /\.(js|css|json|txt|html|ico|svg)(\?.*)?$/i, // 需要压缩的文件
     //   threshold: 10, // 文件容量大于这个值进行压缩
