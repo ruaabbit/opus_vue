@@ -2,7 +2,7 @@
   <div class="container mx-auto flex max-h-screen">
     <div class="flex flex-col items-end w-full">
       <div class="flex items-center justify-center w-full">
-        <ImageGallery :images="imagesNext6Months" />
+        <ArcticSeaIceViewer :images="imagesNext6Months" />
       </div>
     </div>
   </div>
@@ -10,7 +10,7 @@
 
 <script setup>
 import { useMonthPrediction } from '@/common/date'
-import ImageGallery from '../components/ImageGallery.vue'
+import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
 
 const today = new Date()
 const startMonth = today.getMonth()

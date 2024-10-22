@@ -1,76 +1,75 @@
 <template>
-  <div class="w-[640px] h-[640px]">
-    <v-chart :option="option" />
+  <div class="p-6 max-w-lg mx-auto bg-white shadow-md rounded-lg">
+    <a-form
+      :model="formData"
+      :label-col="{ span: 6 }"
+      :wrapper-col="{ span: 14 }"
+      @submit.prevent="submitForm"
+    >
+      <!-- 预报提前期 -->
+      <a-form-item label="预报提前期">
+        <a-input-number
+          v-model:value="formData.forecastLeadTime"
+          :min="1"
+          placeholder="请输入提前期（天）"
+        />
+      </a-form-item>
+      <!-- 目标月份 -->
+      <a-form-item label="目标月份">
+        <a-date-picker
+          v-model:value="formData.targetMonth"
+          picker="month"
+          placeholder="选择月份"
+          value-format="YYYY-MM"
+        />
+      </a-form-item>
+      <!-- 数据范围 -->
+      <a-form-item label="数据范围">
+        <a-range-picker v-model:value="formData.dataRange" picker="month" value-format="YYYY-MM" />
+      </a-form-item>
+      <!-- 分析范围（经纬度） -->
+      <a-form-item label="分析范围">
+        <a-input
+          v-model:value="formData.latLonRange"
+          placeholder="请输入经纬度范围 (如 50N-70N, 140W-60W)"
+        />
+      </a-form-item>
+      <!-- 选择分析目标 -->
+      <a-form-item label="分析目标">
+        <a-radio-group v-model:value="formData.analysisTarget">
+          <a-radio value="sea_ice_area">海冰面积</a-radio>
+          <a-radio value="sea_ice_change">海冰变化</a-radio>
+        </a-radio-group>
+      </a-form-item>
+      <!-- 提交按钮 -->
+      <a-form-item :wrapper-col="{ span: 14, offset: 6 }">
+        <a-button type="primary" html-type="submit">提交分析</a-button>
+      </a-form-item>
+    </a-form>
+    <!-- 热图展示 -->
+    <div v-if="heatmapUrl" class="mt-6">
+      <h3 class="text-lg font-semibold mb-2">分析结果热图</h3>
+      <img :src="heatmapUrl" alt="分析结果热图" class="w-full" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { GlobeComponent } from 'echarts-gl/components' // Import Globe from echarts-gl
-import { Lines3DChart } from 'echarts-gl/charts' // For adding lines and other 3D features
-import VChart, { THEME_KEY } from 'vue-echarts'
-import { ref, provide } from 'vue'
+import { ref } from 'vue'
 
-use([CanvasRenderer, GlobeComponent, Lines3DChart]) // Use the Globe and 3D lines
-
-provide(THEME_KEY, 'dark')
-
-const option = ref({
-  globe: {
-    baseTexture: 'picture/globe-texture/world.topo.bathy.200401.jpg', // Earth texture
-    heightTexture: 'picture/globe-texture/bathymetry_bw_composite_4k.jpg', // Heightmap texture for terrain
-    shading: 'color', // Realistic shading for the 3D effect
-    environment: 'picture/globe-texture/starfield.jpg', // Space background
-    realisticMaterial: {
-      roughness: 0.9
-    },
-    light: {
-      main: {
-        intensity: 3, // Light intensity for realism
-        shadow: true
-      }
-    },
-    viewControl: {
-      autoRotate: false, // Disable auto-rotation
-      targetCoord: [0, 90], // Lock view on the North Pole (latitude 90)
-      alpha: 60, // Control the tilt angle to look down at the pole
-      beta: 0, // Rotation around the y-axis
-      distance: 150, // Distance of the camera from the globe
-      minAlpha: 90, // Limit the minimum tilt angle to prevent looking from too low
-      maxAlpha: 90, // Limit the maximum tilt to ensure always looking from above
-      // minBeta: -180, // Allow full rotation around the North Pole
-      // maxBeta: 180, // Allow full rotation around the North Pole
-      minDistance: 80, // Limit zoom to avoid getting too close
-      maxDistance: 300 // Limit zoom to avoid zooming out too far
-    }
-  },
-  series: [
-    // {
-    //   type: 'lines3D', // Example of adding 3D lines on the globe
-    //   blendMode: 'lighter',
-    //   coordinateSystem: 'globe',
-    //   effect: {
-    //     show: true,
-    //     trailWidth: 4,
-    //     trailOpacity: 0.5,
-    //     trailLength: 0.2,
-    //     constantSpeed: 5
-    //   },
-    //   lineStyle: {
-    //     width: 2.0,
-    //     color: 'green',
-    //     opacity: 0.8
-    //   },
-    //   data: [
-    //     {
-    //       coords: [
-    //         [116.46, 39.92], // Beijing coordinates
-    //         [-74.0, 40.71] // New York coordinates
-    //       ]
-    //     }
-    //   ]
-    // }
-  ]
+const formData = ref({
+  forecastLeadTime: null,
+  targetMonth: null,
+  dataRange: [],
+  latLonRange: '',
+  analysisTarget: 'sea_ice_area' // 默认选择海冰面积
 })
+
+const heatmapUrl = ref('')
+
+const submitForm = () => {
+  console.log('提交数据:', formData.value)
+  // 模拟调用API返回热图URL
+  heatmapUrl.value = 'picture/globe-texture/starfield.jpg' // 替换为实际API返回的热图路径
+}
 </script>

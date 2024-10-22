@@ -1,36 +1,39 @@
 <template>
   <div class="container mx-auto flex flex-col items-center max-h-screen p-4 space-y-4">
     <!-- 返回按钮，预测结果展示时显示 -->
-    <el-button v-if="showResults" class="self-start" type="default" @click="handleBack"
-      >返回</el-button
-    >
+    <a-button v-if="showResults" class="self-start" @click="handleBack"> 返回 </a-button>
 
     <!-- 表单内容，未提交时显示 -->
     <div v-if="!showResults" class="space-y-4">
       <!-- 图片上传组件 -->
-      <el-upload
-        class="upload-demo"
-        drag
-        action=""
-        :auto-upload="false"
-        :on-change="handleUploadChange"
+      <a-upload
+        v-model:file-list="fileList"
+        :accept="'.png'"
+        action="https://seaice.52lxy.one:20443/seaice/png-upload"
+        list-type="picture-card"
+        :multiple="true"
+        :max-count="14"
+        :beforeUpload="handleBeforeUpload"
+        @preview="handlePreview"
+        @change="handleUploadChange"
       >
-        <i class="el-icon-upload"></i>
-        <div class="el-upload__text">拖拽文件到此处，或点击上传</div>
-        <div class="el-upload__tip">仅支持PNG文件</div>
-      </el-upload>
+        <div v-if="fileList.length < 14">
+          <plus-outlined />
+          <div style="margin-top: 8px">Upload</div>
+        </div>
+      </a-upload>
 
       <!-- 月份选择组件 -->
-      <el-date-picker v-model="selectedMonth" type="month" placeholder="选择月份" />
+      <a-date-picker v-model:value="selectedMonth" picker="month" placeholder="选择月份" />
 
       <!-- 提交按钮 -->
-      <el-button type="primary" @click="handleSubmit">提交</el-button>
+      <a-button type="primary" @click="handleSubmit">提交</a-button>
     </div>
 
     <!-- 图片展示，提交后显示 -->
     <div v-if="showResults" class="flex items-center justify-center w-full">
       <div v-if="images.length">
-        <ImageGallery :images="images" />
+        <ArcticSeaIceViewer :images="images" />
       </div>
       <div v-else class="text-center text-gray-500">请上传图片并选择月份以查看预测结果</div>
     </div>
@@ -39,37 +42,60 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import ImageGallery from '../components/ImageGallery.vue'
+import { message } from 'ant-design-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
+import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
 import { useMonthPrediction } from '@/common/api'
+
+function getBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = (error) => reject(error)
+  })
+}
 
 const selectedMonth = ref(null)
 const images = ref([])
 const showResults = ref(false)
+const fileList = ref([]) // Store multiple image files
 
-const handleUploadChange = (file) => {
-  const allowedTypes = ['image/png']
-  if (!allowedTypes.includes(file.raw.type)) {
-    ElMessage.error('仅支持PNG文件')
-    return
+const handleBeforeUpload = (file) => {
+  const isPNG = file.type === 'image/png'
+  if (!isPNG) {
+    message.error('仅支持PNG文件')
   }
-  ElMessage.success('上传成功')
+  return isPNG
+}
+
+const handleUploadChange = (info) => {
+  const { status } = info.file
+  if (status === 'done') {
+    message.success(`${info.file.name} 文件上传成功`)
+  } else if (status === 'error') {
+    message.error(`${info.file.name} 文件上传失败`)
+  }
+}
+
+const handlePreview = async (file) => {
+  if (!file.url && !file.preview) {
+    file.preview = await getBase64(file.originFileObj)
+  }
+  images.value.push(file.url || file.preview)
 }
 
 const handleSubmit = () => {
-  if (selectedMonth.value) {
-    const startYear = selectedMonth.value.getFullYear()
-    const startMonth = selectedMonth.value.getMonth()
+  if (selectedMonth.value && fileList.value.length === 14) {
+    const startYear = selectedMonth.value.year()
+    const startMonth = selectedMonth.value.month()
 
     useMonthPrediction(startYear, startMonth).then((res) => {
       images.value = res
+      showResults.value = true // 显示预测结果
     })
-
-    // images.value = useMonthPrediction(startYear, startMonth)
-
-    showResults.value = true // 显示预测结果
   } else {
-    ElMessage.error('请选择月份')
+    message.error(fileList.value.length !== 14 ? '请上传14张图片' : '请选择月份')
   }
 }
 
@@ -79,9 +105,3 @@ const handleBack = () => {
   selectedMonth.value = null
 }
 </script>
-
-<style scoped>
-.container {
-  max-width: 800px;
-}
-</style>

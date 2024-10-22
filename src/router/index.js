@@ -6,13 +6,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'opus',
-      component: RealTimeDailyForecastView
-    },
-    {
-      path: '/real-time-daily-forecast',
       name: 'real-time-daily-forecast',
-      component: () => import('../views/RealTimeDailyForecastView.vue')
+      component: RealTimeDailyForecastView
     },
     {
       path: '/real-time-monthly-forecast',

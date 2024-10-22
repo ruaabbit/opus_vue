@@ -3,7 +3,8 @@ import axios from 'axios'
 const request = axios.create({
     // baseURL: import.meta.env.VITE_APP_BASE_API,
     // baseURL: 'http://localhost:8000/seaice/',
-    baseURL: 'https://gfaliyun4.seaice.52lxy.one:8443/seaice/',
+    // baseURL: 'https://gfaliyun4.seaice.52lxy.one:8443/seaice/',
+    baseURL: 'https://seaice.52lxy.one:20443/seaice/',
     timeout: 5000,
 })
 
