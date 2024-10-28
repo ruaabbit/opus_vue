@@ -1,51 +1,61 @@
 <template>
   <div class="p-6 max-w-lg mx-auto bg-white shadow-md rounded-lg">
-    <a-form
-      :model="formData"
-      :label-col="{ span: 6 }"
-      :wrapper-col="{ span: 14 }"
-      @submit.prevent="submitForm"
-    >
+    <el-form :model="formData" label-width="120px" @submit.prevent="submitForm">
       <!-- 预报提前期 -->
-      <a-form-item label="预报提前期">
-        <a-input-number
-          v-model:value="formData.forecastLeadTime"
+      <el-form-item label="预报提前期">
+        <el-input-number
+          v-model="formData.forecastLeadTime"
           :min="1"
           placeholder="请输入提前期（天）"
         />
-      </a-form-item>
+      </el-form-item>
+
       <!-- 目标月份 -->
-      <a-form-item label="目标月份">
-        <a-date-picker
-          v-model:value="formData.targetMonth"
-          picker="month"
+      <el-form-item label="目标月份">
+        <el-date-picker
+          v-model="formData.targetMonth"
+          type="month"
           placeholder="选择月份"
+          format="YYYY-MM"
           value-format="YYYY-MM"
         />
-      </a-form-item>
+      </el-form-item>
+
       <!-- 数据范围 -->
-      <a-form-item label="数据范围">
-        <a-range-picker v-model:value="formData.dataRange" picker="month" value-format="YYYY-MM" />
-      </a-form-item>
+      <el-form-item label="数据范围">
+        <el-date-picker
+          v-model="formData.dataRange"
+          type="monthrange"
+          range-separator="至"
+          start-placeholder="开始月份"
+          end-placeholder="结束月份"
+          format="YYYY-MM"
+          value-format="YYYY-MM"
+        />
+      </el-form-item>
+
       <!-- 分析范围（经纬度） -->
-      <a-form-item label="分析范围">
-        <a-input
-          v-model:value="formData.latLonRange"
+      <el-form-item label="分析范围">
+        <el-input
+          v-model="formData.latLonRange"
           placeholder="请输入经纬度范围 (如 50N-70N, 140W-60W)"
         />
-      </a-form-item>
+      </el-form-item>
+
       <!-- 选择分析目标 -->
-      <a-form-item label="分析目标">
-        <a-radio-group v-model:value="formData.analysisTarget">
-          <a-radio value="sea_ice_area">海冰面积</a-radio>
-          <a-radio value="sea_ice_change">海冰变化</a-radio>
-        </a-radio-group>
-      </a-form-item>
+      <el-form-item label="分析目标">
+        <el-radio-group v-model="formData.analysisTarget">
+          <el-radio label="sea_ice_area">海冰面积</el-radio>
+          <el-radio label="sea_ice_change">海冰变化</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
       <!-- 提交按钮 -->
-      <a-form-item :wrapper-col="{ span: 14, offset: 6 }">
-        <a-button type="primary" html-type="submit">提交分析</a-button>
-      </a-form-item>
-    </a-form>
+      <el-form-item>
+        <el-button type="primary" @click="submitForm">提交分析</el-button>
+      </el-form-item>
+    </el-form>
+
     <!-- 热图展示 -->
     <div v-if="heatmapUrl" class="mt-6">
       <h3 class="text-lg font-semibold mb-2">分析结果热图</h3>

@@ -1,33 +1,57 @@
 <template>
   <div class="container mx-auto flex flex-col items-center max-h-screen p-4 space-y-4">
     <!-- 返回按钮，预测结果展示时显示 -->
-    <a-button v-if="showResults" class="self-start" @click="handleBack"> 返回 </a-button>
+    <el-button v-if="showResults" @click="handleBack"> 返回 </el-button>
 
     <!-- 表单内容，未提交时显示 -->
     <div v-if="!showResults" class="space-y-4">
       <!-- 图片上传组件 -->
-      <a-upload
+      <el-upload
         v-model:file-list="fileList"
-        :accept="'.png'"
+        class="upload-demo"
         action="https://seaice.52lxy.one:20443/seaice/png-upload"
-        list-type="picture-card"
+        :accept="'.png'"
         :multiple="true"
-        :max-count="14"
-        :beforeUpload="handleBeforeUpload"
-        @preview="handlePreview"
-        @change="handleUploadChange"
+        :limit="14"
+        list-type="picture-card"
+        :before-upload="handleBeforeUpload"
+        :on-preview="handlePreview"
+        :on-change="handleUploadChange"
+        :on-exceed="handleExceed"
       >
-        <div v-if="fileList.length < 14">
-          <plus-outlined />
-          <div style="margin-top: 8px">Upload</div>
-        </div>
-      </a-upload>
+        <template #default>
+          <div v-if="fileList.length < 14">
+            <el-icon><Plus /></el-icon>
+            <div style="margin-top: 8px">Upload</div>
+          </div>
+        </template>
+
+        <template #file="{ file }">
+          <div>
+            <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
+            <span class="el-upload-list__item-actions">
+              <span class="el-upload-list__item-preview" @click="handlePreview(file)">
+                <el-icon><ZoomIn /></el-icon>
+              </span>
+              <span class="el-upload-list__item-delete" @click="handleRemove(file)">
+                <el-icon><Delete /></el-icon>
+              </span>
+            </span>
+          </div>
+        </template>
+      </el-upload>
 
       <!-- 月份选择组件 -->
-      <a-date-picker v-model:value="selectedMonth" picker="month" placeholder="选择月份" />
+      <el-date-picker
+        v-model="selectedMonth"
+        type="month"
+        placeholder="选择月份"
+        format="YYYY/MM"
+        value-format="YYYY-MM"
+      />
 
       <!-- 提交按钮 -->
-      <a-button type="primary" @click="handleSubmit">提交</a-button>
+      <el-button type="primary" @click="handleSubmit">提交</el-button>
     </div>
 
     <!-- 图片展示，提交后显示 -->
@@ -37,71 +61,118 @@
       </div>
       <div v-else class="text-center text-gray-500">请上传图片并选择月份以查看预测结果</div>
     </div>
+
+    <!-- 预览图片的对话框 -->
+    <el-dialog v-model="dialogVisible">
+      <img w-full :src="dialogImageUrl" alt="Preview Image" />
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { message } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { ElMessage } from 'element-plus'
+import { Plus, ZoomIn, Delete } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
 import { useMonthPrediction } from '@/common/api'
 
-function getBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = (error) => reject(error)
-  })
-}
-
+// 状态管理
 const selectedMonth = ref(null)
 const images = ref([])
 const showResults = ref(false)
-const fileList = ref([]) // Store multiple image files
+const fileList = ref([])
+const dialogImageUrl = ref('')
+const dialogVisible = ref(false)
 
+// 文件上传前的验证
 const handleBeforeUpload = (file) => {
   const isPNG = file.type === 'image/png'
   if (!isPNG) {
-    message.error('仅支持PNG文件')
+    ElMessage.error('仅支持PNG文件')
+    return false
   }
-  return isPNG
+  return true
 }
 
-const handleUploadChange = (info) => {
-  const { status } = info.file
-  if (status === 'done') {
-    message.success(`${info.file.name} 文件上传成功`)
-  } else if (status === 'error') {
-    message.error(`${info.file.name} 文件上传失败`)
+// 处理文件上传状态变化
+const handleUploadChange = (uploadFile) => {
+  if (uploadFile.status === 'ready') {
+    // 文件准备上传
+  } else if (uploadFile.status === 'success') {
+    ElMessage.success(`${uploadFile.name} 文件上传成功`)
+  } else if (uploadFile.status === 'error') {
+    ElMessage.error(`${uploadFile.name} 文件上传失败`)
   }
 }
 
-const handlePreview = async (file) => {
-  if (!file.url && !file.preview) {
-    file.preview = await getBase64(file.originFileObj)
-  }
-  images.value.push(file.url || file.preview)
+// 处理超出文件数量限制
+const handleExceed = () => {
+  ElMessage.warning('最多只能上传14张图片')
 }
 
+// 处理预览图片
+const handlePreview = (uploadFile) => {
+  dialogImageUrl.value = uploadFile.url
+  dialogVisible.value = true
+}
+
+// 处理移除文件
+const handleRemove = (uploadFile) => {
+  fileList.value = fileList.value.filter((file) => file.uid !== uploadFile.uid)
+}
+
+// 处理表单提交
 const handleSubmit = () => {
-  if (selectedMonth.value && fileList.value.length === 14) {
-    const startYear = selectedMonth.value.year()
-    const startMonth = selectedMonth.value.month()
-
-    useMonthPrediction(startYear, startMonth).then((res) => {
-      images.value = res
-      showResults.value = true // 显示预测结果
-    })
-  } else {
-    message.error(fileList.value.length !== 14 ? '请上传14张图片' : '请选择月份')
+  if (!selectedMonth.value) {
+    ElMessage.error('请选择月份')
+    return
   }
+
+  if (fileList.value.length !== 14) {
+    ElMessage.error('请上传14张图片')
+    return
+  }
+
+  const [year, month] = selectedMonth.value.split('-')
+
+  useMonthPrediction(parseInt(year), parseInt(month) - 1)
+    .then((res) => {
+      images.value = res
+      showResults.value = true
+    })
+    .catch((error) => {
+      ElMessage.error('预测失败，请稍后重试')
+      console.error(error)
+    })
 }
 
+// 处理返回
 const handleBack = () => {
   showResults.value = false
   images.value = []
   selectedMonth.value = null
 }
 </script>
+
+<style scoped>
+.upload-demo {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.upload-demo .el-upload {
+  width: 100%;
+}
+
+.el-upload-list__item-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.el-date-picker {
+  width: 100%;
+  max-width: 300px;
+}
+</style>

@@ -1,188 +1,193 @@
 <template>
-  <ConfigProvider :locale="zhCN">
-    <a-layout style="min-height: 100vh">
-      <!-- Sider -->
-      <a-layout-sider
-        v-model:collapsed="collapsed"
-        :trigger="null"
-        collapsible
-        breakpoint="lg"
-        collapsed-width="0"
+  <el-config-provider :locale="zhCn">
+    <el-container class="min-h-screen">
+      <!-- Sider with dark theme -->
+      <el-aside
+        :width="isCollapse ? '64px' : '200px'"
+        class="transition-all bg-[#001529] overflow-hidden"
       >
-        <div class="logo">
-          <img src="@/assets/logo_01.svg" />
-          <strong>OUC AI GROUP</strong>
-        </div>
-        <a-menu v-model:selectedKeys="selectedKeys" theme="dark" mode="inline">
-          <a-menu-item key="/">
-            <router-link to="/">
-              <home-outlined />
-              <span>实时逐日预报</span>
-            </router-link>
-          </a-menu-item>
-          <a-menu-item key="/real-time-monthly-forecast">
-            <router-link to="/real-time-monthly-forecast">
-              <calendar-outlined />
-              <span>实时逐月预报</span>
-            </router-link>
-          </a-menu-item>
-          <a-menu-item key="/daily-forecast-predict">
-            <router-link to="/daily-forecast-predict">
-              <line-chart-outlined />
-              <span>逐日预报测试</span>
-            </router-link>
-          </a-menu-item>
-          <a-menu-item key="/monthly-forecast-predict">
-            <router-link to="/monthly-forecast-predict">
-              <bar-chart-outlined />
-              <span>逐月预报测试</span>
-            </router-link>
-          </a-menu-item>
-          <a-menu-item key="/uncertainty-analysis">
-            <router-link to="/uncertainty-analysis">
-              <experiment-outlined />
-              <span>不确定性分析</span>
-            </router-link>
-          </a-menu-item>
-          <a-menu-item key="/dynamics-analysis">
-            <router-link to="/dynamics-analysis">
-              <thunderbolt-outlined />
-              <span>动力学分析</span>
-            </router-link>
-          </a-menu-item>
-        </a-menu>
-      </a-layout-sider>
+        <div class="h-full flex flex-col">
+          <div class="flex justify-center items-center h-16 my-4 flex-shrink-0">
+            <img src="@/assets/logo_01.svg" class="max-h-full object-contain" />
+            <strong v-show="!isCollapse" class="text-white ml-2">OUC AI GROUP</strong>
+          </div>
 
-      <a-layout>
+          <el-menu
+            :collapse="isCollapse"
+            class="flex-1 border-none !h-auto rounded-menu"
+            :default-active="activeRoute"
+            @select="handleSelect"
+            background-color="#001529"
+            text-color="#ffffff"
+            active-text-color="#409EFF"
+          >
+            <el-menu-item index="/">
+              <el-icon><House /></el-icon>
+              <template #title>实时逐日预报</template>
+            </el-menu-item>
+
+            <el-menu-item index="/real-time-monthly-forecast">
+              <el-icon><Calendar /></el-icon>
+              <template #title>实时逐月预报</template>
+            </el-menu-item>
+
+            <el-menu-item index="/daily-forecast-predict">
+              <el-icon><TrendCharts /></el-icon>
+              <template #title>逐日预报测试</template>
+            </el-menu-item>
+
+            <el-menu-item index="/monthly-forecast-predict">
+              <el-icon><Histogram /></el-icon>
+              <template #title>逐月预报测试</template>
+            </el-menu-item>
+
+            <el-menu-item index="/uncertainty-analysis">
+              <el-icon><Share /></el-icon>
+              <template #title>不确定性分析</template>
+            </el-menu-item>
+
+            <el-menu-item index="/dynamics-analysis">
+              <el-icon><Lightning /></el-icon>
+              <template #title>动力学分析</template>
+            </el-menu-item>
+          </el-menu>
+        </div>
+      </el-aside>
+
+      <el-container>
         <!-- Header -->
-        <a-layout-header style="background: #001a54; padding: 0; height: auto">
-          <a-row type="flex" justify="space-between" align="middle" class="px-4 py-2">
-            <a-col>
-              <menu-unfold-outlined
-                v-if="collapsed"
-                class="trigger text-white text-2xl"
-                @click="() => (collapsed = !collapsed)"
-              />
-              <menu-fold-outlined
-                v-else
-                class="trigger text-white text-2xl"
-                @click="() => (collapsed = !collapsed)"
-              />
-            </a-col>
-            <a-col flex="auto" class="text-center">
-              <h1 class="text-white text-2xl font-bold m-0">
+        <el-header class="bg-gradient-to-r from-[#001529] to-[#003192] p-0 shadow-md">
+          <div class="flex justify-between items-center px-6 h-full">
+            <el-button
+              text
+              @click="toggleCollapse"
+              class="text-white text-xl hover:bg-[#ffffff1a] p-2 rounded"
+            >
+              <el-icon>
+                <component :is="isCollapse ? 'Expand' : 'Fold'" />
+              </el-icon>
+            </el-button>
+
+            <div class="text-center flex-1">
+              <h1 class="text-white text-2xl font-bold mb-1">
                 北极海冰时空多尺度预报基础模型 MetaICE
               </h1>
-              <p class="text-white text-lg m-0">
+              <p class="text-gray-200 text-base m-0">
                 MetaICE: Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting
               </p>
-            </a-col>
-            <a-col>
-              <a-button
-                type="link"
-                href="https://kmrvyozrlx.k.topthink.com/@oucaigroup/readme.html"
-                target="_blank"
-              >
-                关于我们
-              </a-button>
-            </a-col>
-          </a-row>
-        </a-layout-header>
+            </div>
+            <a
+              href="https://kmrvyozrlx.k.topthink.com/@oucaigroup/readme.html"
+              target="_blank"
+              class="text-white hover:text-blue-300 text-lg font-medium no-underline"
+            >
+              关于我们
+            </a>
+          </div>
+        </el-header>
 
         <!-- Content -->
-        <a-layout-content style="margin: 24px 16px 0">
-          <div style="padding: 24px; background: #fff; min-height: 360px">
+        <el-main class="p-6 bg-[#f0f2f5]">
+          <div class="bg-white p-6 min-h-[360px] rounded-lg shadow-sm">
             <router-view></router-view>
           </div>
-        </a-layout-content>
+        </el-main>
 
         <!-- Footer -->
-        <a-layout-footer style="text-align: center">
+        <el-footer class="text-center text-gray-600 py-4">
           OUC AI GROUP ©2024 Copyright by 中国海洋大学人工智能研究院
-        </a-layout-footer>
-      </a-layout>
-    </a-layout>
-  </ConfigProvider>
+        </el-footer>
+      </el-container>
+    </el-container>
+  </el-config-provider>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import {
-  HomeOutlined,
-  CalendarOutlined,
-  LineChartOutlined,
-  BarChartOutlined,
-  ExperimentOutlined,
-  ThunderboltOutlined,
-  MenuUnfoldOutlined,
-  MenuFoldOutlined
-} from '@ant-design/icons-vue'
-import { ConfigProvider } from 'ant-design-vue'
-import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import dayjs from 'dayjs'
-import 'dayjs/locale/zh-cn'
-dayjs.locale('zh-cn')
+import { useRoute, useRouter } from 'vue-router'
+import { House, Calendar, TrendCharts, Histogram, Share, Lightning } from '@element-plus/icons-vue'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const route = useRoute()
-const selectedKeys = ref([route.path])
-const collapsed = ref(false)
+const router = useRouter()
+const activeRoute = ref(route.path)
+const isCollapse = ref(false)
 
-// 监听路由变化，更新选中的菜单项
 watch(
   () => route.path,
   (newPath) => {
-    selectedKeys.value = [newPath]
+    activeRoute.value = newPath
   }
 )
+
+const handleSelect = (key) => {
+  router.push(key)
+}
+
+const toggleCollapse = () => {
+  isCollapse.value = !isCollapse.value
+}
 </script>
 
-<style scoped>
-.logo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 64px;
-  margin: 16px;
-  border-radius: 4px;
+<style>
+/* 深色主题菜单样式 */
+.el-menu {
+  border-right: none;
 }
 
-.logo strong {
-  color: #ffffff; /* 白色字体 */
+.el-menu-item {
+  height: 50px;
+  line-height: 50px;
+  margin: 4px 8px; /* 添加间距 */
+  border-radius: 8px; /* 添加圆角 */
 }
 
-.logo img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+/* 悬停状态 */
+.el-menu-item:hover {
+  background-color: #1890ff !important;
+  border-radius: 8px; /* 保持圆角 */
 }
 
-.ant-layout-sider-children .ant-menu-item a {
-  color: rgba(255, 255, 255, 0.65);
+/* 激活状态 */
+.el-menu-item.is-active {
+  background-color: #1890ff !important;
+  color: #ffffff !important;
+  border-radius: 8px; /* 保持圆角 */
 }
 
-.ant-layout-sider-children .ant-menu-item-selected a,
-.ant-layout-sider-children .ant-menu-item a:hover {
-  color: #fff;
+/* 折叠状态下的样式调整 */
+.el-menu--collapse .el-menu-item {
+  margin: 4px 2px; /* 折叠时减小间距 */
 }
 
-.trigger {
-  font-size: 18px;
-  line-height: 64px;
-  padding: 0 24px;
-  cursor: pointer;
-  transition: color 0.3s;
+/* 去除侧边栏滚动条 */
+.el-aside {
+  transition: width 0.3s ease;
 }
 
-.trigger:hover {
-  color: #1890ff;
+/* 调整菜单容器高度 */
+.el-menu--collapse {
+  width: 64px;
 }
 
-.ant-layout-header .ant-btn-link {
-  color: white;
+/* 调整内容区域的过渡效果 */
+.el-main {
+  transition: all 0.3s ease;
 }
 
-.ant-layout-header .ant-btn-link:hover {
-  color: #40a9ff;
+/* 确保图标垂直居中 */
+.el-menu-item .el-icon {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+/* 优化标题栏阴影效果 */
+.el-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 圆角菜单容器 */
+.rounded-menu {
+  padding: 4px; /* 为菜单项留出空间 */
 }
 </style>

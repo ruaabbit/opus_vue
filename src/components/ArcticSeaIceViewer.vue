@@ -46,7 +46,9 @@
         v-model="interval"
         class="w-full mt-2"
       />
-      <label for="intervalRange" class="block text-center mt-2">切换速度: {{ interval }}s</label>
+      <label for="intervalRange" class="block text-center mt-2"
+        >图片播放速度: {{ interval }}s</label
+      >
     </div>
 
     <div
