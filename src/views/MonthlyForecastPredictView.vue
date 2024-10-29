@@ -20,9 +20,9 @@
         :on-exceed="handleExceed"
       >
         <template #default>
-          <div v-if="fileList.length < 14">
-            <el-icon><Plus /></el-icon>
-            <div style="margin-top: 8px">Upload</div>
+          <div v-if="fileList.length < 14" class="upload-trigger">
+            <el-icon class="upload-icon"><Plus /></el-icon>
+            <div class="upload-text">Upload</div>
           </div>
         </template>
 
@@ -165,6 +165,27 @@ const handleBack = () => {
   width: 100%;
 }
 
+/* 新增的上传按钮样式 */
+.upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.upload-icon {
+  font-size: 28px;
+  color: #8c939d;
+}
+
+.upload-text {
+  margin-top: 8px;
+  color: #8c939d;
+  font-size: 14px;
+}
+
 .el-upload-list__item-thumbnail {
   width: 100%;
   height: 100%;
@@ -174,5 +195,32 @@ const handleBack = () => {
 .el-date-picker {
   width: 100%;
   max-width: 300px;
+}
+
+/* 添加预览图片的操作样式 */
+.el-upload-list__item-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.el-upload-list__item-actions:hover {
+  opacity: 1;
+}
+
+.el-upload-list__item-preview,
+.el-upload-list__item-delete {
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  margin: 0 7px;
 }
 </style>

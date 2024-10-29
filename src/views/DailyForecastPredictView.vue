@@ -20,9 +20,9 @@
         :on-exceed="handleExceed"
       >
         <template #default>
-          <div v-if="fileList.length < 14">
-            <el-icon><Plus /></el-icon>
-            <div style="margin-top: 8px">Upload</div>
+          <div v-if="fileList.length < 14" class="upload-trigger">
+            <el-icon class="upload-icon"><Plus /></el-icon>
+            <div class="upload-text">Upload</div>
           </div>
         </template>
 
@@ -175,6 +175,27 @@ const handleBack = () => {
 
 .el-upload {
   width: 100%;
+}
+
+/* 新增的上传按钮样式 */
+.upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.upload-icon {
+  font-size: 28px;
+  color: #8c939d;
+}
+
+.upload-text {
+  margin-top: 8px;
+  color: #8c939d;
+  font-size: 14px;
 }
 
 .el-upload-list__item-thumbnail {
