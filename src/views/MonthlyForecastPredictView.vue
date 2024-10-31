@@ -71,7 +71,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
 import { Plus, ZoomIn, Delete } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
 import { useMonthPrediction } from '@/common/api'

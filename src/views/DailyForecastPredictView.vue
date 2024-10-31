@@ -5,6 +5,11 @@
 
     <!-- 表单内容 -->
     <div v-if="!showResults" class="space-y-4">
+      <!-- 上传提示 -->
+      <div class="text-center mb-4">
+        <p class="text-gray-600">请上传exactly 14张PNG图片 (已上传: {{ fileList.length }}/14)</p>
+      </div>
+
       <!-- 图片上传组件 -->
       <el-upload
         v-model:file-list="fileList"
@@ -16,13 +21,19 @@
         :limit="14"
         :before-upload="handleBeforeUpload"
         :on-preview="handlePreview"
-        :on-change="handleUploadChange"
-        :on-exceed="handleExceed"
+        :on-success="handleUploadSuccess"
+        :on-error="handleUploadError"
+        :on-remove="handleRemove"
+        :auto-upload="true"
       >
         <template #default>
           <div v-if="fileList.length < 14" class="upload-trigger">
             <el-icon class="upload-icon"><Plus /></el-icon>
             <div class="upload-text">Upload</div>
+          </div>
+          <div v-else class="upload-trigger">
+            <el-icon class="upload-icon text-green-500"><Check /></el-icon>
+            <div class="upload-text text-green-500">已完成</div>
           </div>
         </template>
 
@@ -51,7 +62,13 @@
       />
 
       <!-- 提交按钮 -->
-      <el-button type="primary" @click="handleSubmit">提交</el-button>
+      <el-button
+        type="primary"
+        @click="handleSubmit"
+        :disabled="fileList.length !== 14 || !selectedDate || uploadedPaths.length !== 14"
+      >
+        提交
+      </el-button>
     </div>
 
     <!-- 预测结果展示 -->
@@ -70,9 +87,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Plus, ZoomIn, Delete } from '@element-plus/icons-vue'
+import { ref, watch } from 'vue'
+import { Plus, ZoomIn, Delete, Check } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
 import { useDayPrediction } from '@/common/api'
 
@@ -83,6 +99,14 @@ const showResults = ref(false)
 const fileList = ref([])
 const dialogImageUrl = ref('')
 const dialogVisible = ref(false)
+const uploadedPaths = ref([]) // 存储上传成功后的图片路径
+
+// 监听文件列表变化
+watch(fileList, (newFiles) => {
+  if (newFiles.length === 14) {
+    ElMessage.success('已成功选择14张图片')
+  }
+})
 
 // Base64转换工具函数
 const getBase64 = (file) => {
@@ -101,23 +125,29 @@ const handleBeforeUpload = (file) => {
     ElMessage.error('仅支持PNG文件')
     return false
   }
+
+  if (fileList.value.length >= 14) {
+    ElMessage.error('已达到14张图片上限')
+    return false
+  }
+
   return true
 }
 
-// 处理文件超出限制
-const handleExceed = () => {
-  ElMessage.warning('最多只能上传14张图片')
+// 处理上传成功
+const handleUploadSuccess = (response, uploadFile) => {
+  // 假设接口返回的数据中包含图片路径，根据实际接口返回格式调整
+  const imagePath = response.image_url
+  if (imagePath) {
+    uploadedPaths.value.push(imagePath)
+  }
+  ElMessage.success(`${uploadFile.name} 上传成功`)
 }
 
-// 处理上传状态变化
-const handleUploadChange = (uploadFile) => {
-  if (uploadFile.status === 'ready') {
-    // 文件准备上传
-  } else if (uploadFile.status === 'success') {
-    ElMessage.success(`${uploadFile.name} 文件上传成功`)
-  } else if (uploadFile.status === 'error') {
-    ElMessage.error(`${uploadFile.name} 文件上传失败`)
-  }
+// 处理上传失败
+const handleUploadError = (error, uploadFile) => {
+  ElMessage.error(`${uploadFile.name} 上传失败`)
+  console.error('Upload error:', error)
 }
 
 // 处理文件预览
@@ -132,6 +162,12 @@ const handlePreview = async (file) => {
 // 处理文件移除
 const handleRemove = (uploadFile) => {
   fileList.value = fileList.value.filter((file) => file.uid !== uploadFile.uid)
+  // 同时移除对应的路径
+  const index = fileList.value.findIndex((file) => file.uid === uploadFile.uid)
+  if (index !== -1) {
+    uploadedPaths.value.splice(index, 1)
+  }
+  ElMessage.warning(`还需上传${14 - fileList.value.length}张图片`)
 }
 
 // 处理表单提交
@@ -142,11 +178,16 @@ const handleSubmit = () => {
   }
 
   if (fileList.value.length !== 14) {
-    ElMessage.error('请上传14张图片')
+    ElMessage.error(`请上传exactly 14张图片，当前已上传${fileList.value.length}张`)
     return
   }
 
-  useDayPrediction(selectedDate.value)
+  if (uploadedPaths.value.length !== 14) {
+    ElMessage.error('部分图片上传未完成，请等待所有图片上传完成后重试')
+    return
+  }
+
+  useDayPrediction(selectedDate.value, uploadedPaths.value)
     .then((res) => {
       images.value = res
       showResults.value = true
@@ -163,6 +204,7 @@ const handleBack = () => {
   images.value = []
   selectedDate.value = null
   fileList.value = []
+  uploadedPaths.value = []
 }
 </script>
 
@@ -177,7 +219,6 @@ const handleBack = () => {
   width: 100%;
 }
 
-/* 新增的上传按钮样式 */
 .upload-trigger {
   display: flex;
   flex-direction: column;
@@ -209,7 +250,6 @@ const handleBack = () => {
   max-width: 300px;
 }
 
-/* 预览图片样式 */
 .el-upload-list__item-actions {
   position: absolute;
   top: 0;
@@ -218,7 +258,6 @@ const handleBack = () => {
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
   opacity: 0;
   transition: opacity 0.3s;
