@@ -7,7 +7,7 @@
     <div v-if="!showResults" class="space-y-4">
       <!-- 上传提示 -->
       <div class="text-center mb-4">
-        <p class="text-gray-600">请上传exactly 14张PNG图片 (已上传: {{ fileList.length }}/14)</p>
+        <p class="text-gray-600">请上传正好14张PNG图片 (已上传: {{ fileList.length }}/14)</p>
       </div>
 
       <!-- 图片上传组件 -->
@@ -19,8 +19,8 @@
         list-type="picture-card"
         :multiple="true"
         :limit="14"
-        :before-upload="handleBeforeUpload"
-        :on-preview="handlePreview"
+        :before-upload="validateBeforeUpload"
+        :on-preview="showPreview"
         :on-success="handleUploadSuccess"
         :on-error="handleUploadError"
         :on-remove="handleRemove"
@@ -29,7 +29,7 @@
         <template #default>
           <div v-if="fileList.length < 14" class="upload-trigger">
             <el-icon class="upload-icon"><Plus /></el-icon>
-            <div class="upload-text">Upload</div>
+            <div class="upload-text">上传</div>
           </div>
           <div v-else class="upload-trigger">
             <el-icon class="upload-icon text-green-500"><Check /></el-icon>
@@ -41,7 +41,7 @@
           <div>
             <img class="el-upload-list__item-thumbnail" :src="file.url" alt="" />
             <span class="el-upload-list__item-actions">
-              <span class="el-upload-list__item-preview" @click="handlePreview(file)">
+              <span class="el-upload-list__item-preview" @click="showPreview(file)">
                 <el-icon><ZoomIn /></el-icon>
               </span>
               <span class="el-upload-list__item-delete" @click="handleRemove(file)">
@@ -64,7 +64,7 @@
       <!-- 提交按钮 -->
       <el-button
         type="primary"
-        @click="handleSubmit"
+        @click="submitPredictionRequest"
         :disabled="fileList.length !== 14 || !selectedDate || uploadedPaths.length !== 14"
       >
         提交
@@ -80,7 +80,7 @@
     </div>
 
     <!-- 图片预览对话框 -->
-    <el-dialog v-model="dialogVisible" :title="'预览'">
+    <el-dialog v-model="dialogVisible" title="预览">
       <img w-full :src="dialogImageUrl" alt="Preview Image" />
     </el-dialog>
   </div>
@@ -91,14 +91,16 @@ import { ref, watch } from 'vue'
 import { Plus, ZoomIn, Delete, Check } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
 import { useDayPrediction } from '@/common/api'
+import { ElMessage } from 'element-plus';  
+
 
 // 状态管理
 const selectedDate = ref(null)
-const images = ref([])
-const showResults = ref(false)
-const fileList = ref([])
-const dialogImageUrl = ref('')
-const dialogVisible = ref(false)
+const images = ref([]) // 存储预测结果图片
+const showResults = ref(false) // 控制预测结果显示
+const fileList = ref([]) // 上传的文件列表
+const dialogImageUrl = ref('') // 预览图像的URL
+const dialogVisible = ref(false) // 控制预览对话框显示
 const uploadedPaths = ref([]) // 存储上传成功后的图片路径
 
 // 监听文件列表变化
@@ -108,8 +110,8 @@ watch(fileList, (newFiles) => {
   }
 })
 
-// Base64转换工具函数
-const getBase64 = (file) => {
+// 将文件转换为Base64格式
+const convertToBase64 = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.readAsDataURL(file)
@@ -118,8 +120,8 @@ const getBase64 = (file) => {
   })
 }
 
-// 文件上传前验证
-const handleBeforeUpload = (file) => {
+// 文件上传前的验证逻辑
+const validateBeforeUpload = (file) => {
   const isPNG = file.type === 'image/png'
   if (!isPNG) {
     ElMessage.error('仅支持PNG文件')
@@ -134,7 +136,7 @@ const handleBeforeUpload = (file) => {
   return true
 }
 
-// 处理上传成功
+// 处理单个文件上传成功
 const handleUploadSuccess = (response, uploadFile) => {
   // 假设接口返回的数据中包含图片路径，根据实际接口返回格式调整
   const imagePath = response.image_url
@@ -144,22 +146,22 @@ const handleUploadSuccess = (response, uploadFile) => {
   ElMessage.success(`${uploadFile.name} 上传成功`)
 }
 
-// 处理上传失败
+// 处理文件上传失败
 const handleUploadError = (error, uploadFile) => {
   ElMessage.error(`${uploadFile.name} 上传失败`)
   console.error('Upload error:', error)
 }
 
-// 处理文件预览
-const handlePreview = async (file) => {
+// 显示文件预览
+const showPreview = async (file) => {
   if (!file.url && !file.preview) {
-    file.preview = await getBase64(file.raw)
+    file.preview = await convertToBase64(file.raw)
   }
   dialogImageUrl.value = file.url || file.preview
   dialogVisible.value = true
 }
 
-// 处理文件移除
+// 移除文件
 const handleRemove = (uploadFile) => {
   fileList.value = fileList.value.filter((file) => file.uid !== uploadFile.uid)
   // 同时移除对应的路径
@@ -170,15 +172,15 @@ const handleRemove = (uploadFile) => {
   ElMessage.warning(`还需上传${14 - fileList.value.length}张图片`)
 }
 
-// 处理表单提交
-const handleSubmit = () => {
+// 提交预测请求
+const submitPredictionRequest = () => {
   if (!selectedDate.value) {
     ElMessage.error('请选择日期')
     return
   }
 
   if (fileList.value.length !== 14) {
-    ElMessage.error(`请上传exactly 14张图片，当前已上传${fileList.value.length}张`)
+    ElMessage.error(`请上传正好14张图片，当前已上传${fileList.value.length}张`)
     return
   }
 
@@ -198,7 +200,7 @@ const handleSubmit = () => {
     })
 }
 
-// 处理返回操作
+// 返回并重置表单
 const handleBack = () => {
   showResults.value = false
   images.value = []
