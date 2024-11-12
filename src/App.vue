@@ -61,10 +61,10 @@
             <el-button
               text
               @click="toggleCollapse"
-              class="text-white text-xl hover:bg-[#ffffff1a] p-2 rounded"
+              class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-300"
             >
-              <el-icon>
-                <component :is="isCollapse ? 'Expand' : 'Fold'" />
+              <el-icon :size="24" class="text-black">
+                <component :is="isCollapse ? Expand : Fold" />
               </el-icon>
             </el-button>
 
@@ -105,7 +105,16 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { House, Calendar, TrendCharts, Histogram, Share, Lightning } from '@element-plus/icons-vue'
+import {
+  House,
+  Calendar,
+  TrendCharts,
+  Histogram,
+  Share,
+  Lightning,
+  Expand,
+  Fold
+} from '@element-plus/icons-vue'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const route = useRoute()

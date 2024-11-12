@@ -58,6 +58,7 @@
         type="date"
         placeholder="选择日期"
         format="YYYY/MM/DD"
+        style="width: 100%; max-width: 300px"
         value-format="YYYY/MM/DD"
       />
 
@@ -91,8 +92,7 @@ import { ref, watch } from 'vue'
 import { Plus, ZoomIn, Delete, Check } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
 import { useDayPrediction } from '@/common/api'
-import { ElMessage } from 'element-plus';  
-
+import { ElMessage } from 'element-plus'
 
 // 状态管理
 const selectedDate = ref(null)
