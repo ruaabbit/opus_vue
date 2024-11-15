@@ -19,6 +19,7 @@
         list-type="picture-card"
         :multiple="true"
         :limit="14"
+        
         :before-upload="validateBeforeUpload"
         :on-preview="showPreview"
         :on-success="handleUploadSuccess"

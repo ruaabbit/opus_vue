@@ -30,10 +30,32 @@ export async function useMonthPrediction(startDate, imagePaths) {
         })
 
         // Assuming the response has the structure: { data: [{path: '...', date: '...'}, ...] }
-        const images = response.data
-        return images
+        const data = response.data
+        return data
     } catch (error) {
         console.error("Error fetching day predictions:", error)
+        return []
+    }
+}
+
+export async function useRealtimeMonthPrediction() {
+    try {
+        const response = await request.get('/realtime-month-prediction');
+        const data = response.data;
+        return data
+    } catch (error) {
+        console.error("Error fetching realtime month predictions:", error)
+        return []
+    }
+}
+
+export async function useRealtimeDayPrediction() {
+    try {
+        const response = await request.get('/realtime-day-prediction');
+        const data = response.data;
+        return data
+    } catch (error) {
+        console.error("Error fetching realtime day predictions:", error)
         return []
     }
 }

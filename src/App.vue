@@ -8,7 +8,7 @@
       >
         <div class="h-full flex flex-col">
           <div class="flex justify-center items-center h-16 my-4 flex-shrink-0">
-            <img src="@/assets/logo_01.svg" class="max-h-full object-contain" />
+            <img src="@/assets/logo_01.svg" class="max-h-full object-contain" alt="OUC AI GROUP" />
             <strong v-show="!isCollapse" class="text-white ml-2">OUC AI GROUP</strong>
           </div>
 
@@ -59,7 +59,7 @@
         <el-header class="bg-gradient-to-r from-[#001529] to-[#003192] p-0 shadow-md">
           <div class="flex justify-between items-center px-6 h-full">
             <el-button
-              text
+              aria-label="Collapse Menu"
               @click="toggleCollapse"
               class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-300"
             >

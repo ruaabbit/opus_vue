@@ -2,19 +2,31 @@
   <div class="container mx-auto flex max-h-screen">
     <div class="flex flex-col items-end w-full">
       <div class="flex items-center justify-center w-full">
-        <ArcticSeaIceViewer :images="imagesNext6Months" />
+        <div v-if="isLoading">
+          <!-- 显示加载动画 -->
+          <LoadingAnimation />
+        </div>
+        <div v-else>
+          <ArcticSeaIceViewer :images="images" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useMonthPrediction } from '@/common/date'
+import { ref, onMounted } from 'vue'
+import { useRealtimeMonthPrediction } from '@/common/api'
 import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
+import LoadingAnimation from '../components/LoadingAnimation.vue'
 
-const today = new Date()
-const startMonth = today.getMonth()
-const startYear = today.getFullYear()
+const images = ref([])
+const isLoading = ref(true)
 
-const imagesNext6Months = useMonthPrediction(startYear, startMonth)
+onMounted(() => {
+  useRealtimeMonthPrediction().then((data) => {
+    images.value = data
+    isLoading.value = false
+  })
+})
 </script>

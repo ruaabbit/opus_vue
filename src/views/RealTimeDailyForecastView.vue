@@ -2,16 +2,31 @@
   <div class="container mx-auto flex max-h-screen">
     <div class="flex flex-col items-end w-full">
       <div class="flex items-center justify-center w-full">
-        <ArcticSeaIceViewer :images="imagesNext7Days" />
+        <div v-if="isLoading">
+          <!-- 显示加载动画 -->
+          <LoadingAnimation />
+        </div>
+        <div v-else>
+          <ArcticSeaIceViewer :images="images" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useDayPrediction } from '@/common/date'
+import { ref, onMounted } from 'vue'
+import { useRealtimeDayPrediction } from '@/common/api'
 import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
+import LoadingAnimation from '../components/LoadingAnimation.vue'
 
-const today = new Date().toLocaleDateString().slice(0, 10) // 获取今天的日期
-const imagesNext7Days = useDayPrediction(today, 7) // 获取未来7天的预测结果
+const images = ref([])
+const isLoading = ref(true)
+
+onMounted(() => {
+  useRealtimeDayPrediction().then((data) => {
+    images.value = data
+    isLoading.value = false
+  })
+})
 </script>
