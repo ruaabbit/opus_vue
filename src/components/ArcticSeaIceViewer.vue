@@ -1,12 +1,12 @@
 <template>
   <div class="flex flex-col items-center">
-    <h2 class="mt-2 text-center text-5xl">{{ currentImage.date }}</h2>
+    <h2 v-if="currentImage" class="mt-2 text-center text-5xl">{{ currentImage.date }}</h2>
 
-    <div class="relative flex justify-center items-center">
+    <div v-if="currentImage" class="relative flex justify-center items-center">
       <img
         :src="currentImage.path"
         alt="Arctic Sea Ice Prediction"
-        class="cursor-pointer min-w-[450px] max-w-full"
+        class="cursor-pointer min-w-[450px] max-w-[800px]"
         @click="viewImage(currentImage)"
         @mouseover="showTooltip = true"
         @mouseleave="showTooltip = false"
@@ -30,7 +30,7 @@
       <button
         @click="nextImage"
         class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
-        :disabled="currentImageIndex === images.length - 1"
+        :disabled="!images?.length || currentImageIndex === images.length - 1"
       >
         下一张
       </button>
@@ -93,37 +93,56 @@
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
-  images: Array
+  images: {
+    type: Array,
+    required: true,
+    default: () => []
+  }
 })
 
 const selectedImage = ref(null)
 const currentImageIndex = ref(0)
-const currentImage = ref(props.images[currentImageIndex.value])
+const currentImage = ref(null)
 const scale = ref(1)
-const interval = ref(1) // 轮播间隔时间（秒）
-const isPaused = ref(false) // 轮播暂停状态
-const showTooltip = ref(false) // 工具提示的显示状态
+const interval = ref(1)
+const isPaused = ref(false)
+const showTooltip = ref(false)
+
+// 初始化 currentImage
+const initCurrentImage = () => {
+  if (props.images && props.images.length > 0) {
+    currentImage.value = props.images[currentImageIndex.value]
+  } else {
+    currentImage.value = null
+  }
+}
 
 const viewImage = (image) => {
-  selectedImage.value = image
-  scale.value = 1
+  if (image) {
+    selectedImage.value = image
+    scale.value = 1
+  }
 }
 
 const handleWheel = (event) => {
   const delta = Math.max(-1, Math.min(1, event.deltaY))
-  scale.value -= delta * 0.1
+  scale.value = Math.max(0.1, Math.min(3, scale.value - delta * 0.1))
   event.preventDefault()
 }
 
 const nextImage = () => {
-  currentImageIndex.value = (currentImageIndex.value + 1) % props.images.length
-  currentImage.value = props.images[currentImageIndex.value]
+  if (props.images && props.images.length > 0) {
+    currentImageIndex.value = (currentImageIndex.value + 1) % props.images.length
+    currentImage.value = props.images[currentImageIndex.value]
+  }
 }
 
 const prevImage = () => {
-  currentImageIndex.value =
-    (currentImageIndex.value - 1 + props.images.length) % props.images.length
-  currentImage.value = props.images[currentImageIndex.value]
+  if (props.images && props.images.length > 0) {
+    currentImageIndex.value =
+      (currentImageIndex.value - 1 + props.images.length) % props.images.length
+    currentImage.value = props.images[currentImageIndex.value]
+  }
 }
 
 let intervalId
@@ -131,7 +150,7 @@ let intervalId
 const startInterval = () => {
   clearInterval(intervalId)
   intervalId = setInterval(() => {
-    if (!isPaused.value) {
+    if (!isPaused.value && props.images && props.images.length > 0) {
       nextImage()
     }
   }, interval.value * 1000)
@@ -142,6 +161,7 @@ const togglePause = () => {
 }
 
 onMounted(() => {
+  initCurrentImage()
   startInterval()
 })
 
@@ -152,8 +172,12 @@ onBeforeUnmount(() => {
 watch(
   () => props.images,
   (newImages) => {
-    currentImageIndex.value = 0
-    currentImage.value = newImages[currentImageIndex.value]
+    if (newImages && newImages.length > 0) {
+      currentImageIndex.value = 0
+      currentImage.value = newImages[currentImageIndex.value]
+    } else {
+      currentImage.value = null
+    }
   }
 )
 

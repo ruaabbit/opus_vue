@@ -64,14 +64,20 @@
       <el-button
         type="primary"
         @click="submitPredictionRequest"
+        :loading="isLoading"
         :disabled="fileList.length !== 12 || !selectedDate || uploadedPaths.length !== 12"
       >
-        提交
+        {{ isLoading ? '分析中...' : '提交分析' }}
       </el-button>
     </div>
 
+    <!-- 加载动画 -->
+    <div v-if="isLoading" class="flex justify-center my-6">
+      <LoadingAnimation />
+    </div>
+
     <!-- 预测结果展示 -->
-    <div v-if="showResults" class="flex items-center justify-center w-full">
+    <div v-if="!isLoading && showResults" class="flex items-center justify-center w-full">
       <div v-if="images.length">
         <ArcticSeaIceViewer :images="images" />
       </div>
@@ -89,6 +95,7 @@
 import { ref, watch } from 'vue'
 import { Plus, ZoomIn, Delete, Check } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
+import LoadingAnimation from '@/components/LoadingAnimation.vue'
 import { useMonthPrediction } from '@/common/api'
 import { ElMessage } from 'element-plus'
 
@@ -100,6 +107,7 @@ const fileList = ref([]) // 上传的文件列表
 const dialogImageUrl = ref('') // 预览图像的URL
 const dialogVisible = ref(false) // 控制预览对话框显示
 const uploadedPaths = ref([]) // 存储上传成功后的图片路径
+const isLoading = ref(false) // 添加 isLoading 状态
 
 // 监听文件列表变化
 watch(fileList, (newFiles) => {
@@ -171,7 +179,7 @@ const handleRemove = (uploadFile) => {
 }
 
 // 提交预测请求
-const submitPredictionRequest = () => {
+const submitPredictionRequest = async () => {
   if (!selectedDate.value) {
     ElMessage.error('请选择日期')
     return
@@ -187,18 +195,19 @@ const submitPredictionRequest = () => {
     return
   }
 
-  const formattedDate = `${selectedDate.value.getFullYear()}/${(selectedDate.value.getMonth() + 1).toString().padStart(2, '0')}/${selectedDate.value.getDate().toString().padStart(2, '0')}`
-  // 在提交请求时使用 formattedDate
-
-  useMonthPrediction(formattedDate, uploadedPaths.value)
-    .then((res) => {
-      images.value = res
-      showResults.value = true
-    })
-    .catch((error) => {
-      ElMessage.error('预测失败，请稍后重试')
-      console.error(error)
-    })
+  try {
+    isLoading.value = true
+    const formattedDate = `${selectedDate.value.getFullYear()}/${(selectedDate.value.getMonth() + 1).toString().padStart(2, '0')}/${selectedDate.value.getDate().toString().padStart(2, '0')}`
+    const res = await useMonthPrediction(formattedDate, uploadedPaths.value)
+    images.value = res
+    showResults.value = true
+    ElMessage.success('分析完成')
+  } catch (error) {
+    ElMessage.error('预测失败，请稍后重试')
+    console.error(error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // 返回并重置表单
@@ -208,6 +217,7 @@ const handleBack = () => {
   selectedDate.value = null
   fileList.value = []
   uploadedPaths.value = []
+  isLoading.value = false
 }
 </script>
 

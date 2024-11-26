@@ -61,9 +61,10 @@
             <el-button
               aria-label="Collapse Menu"
               @click="toggleCollapse"
-              class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-300"
+              class="collapse-btn !p-2 rounded-full hover:bg-opacity-90 transition-all duration-300"
+              :class="{ 'rotate-180': !isCollapse }"
             >
-              <el-icon :size="24" class="text-black">
+              <el-icon :size="20" class="text-white">
                 <component :is="isCollapse ? Expand : Fold" />
               </el-icon>
             </el-button>
@@ -95,7 +96,7 @@
 
         <!-- Footer -->
         <el-footer class="text-center text-gray-600 py-4">
-          OUC AI GROUP ©2024 Copyright by 中国海洋大学人工智能研究院
+          OUC AI GROUP 2024 Copyright by 中国海洋大学人工智能研究院
         </el-footer>
       </el-container>
     </el-container>
@@ -198,5 +199,20 @@ const toggleCollapse = () => {
 /* 圆角菜单容器 */
 .rounded-menu {
   padding: 4px; /* 为菜单项留出空间 */
+}
+
+/* 折叠按钮样式 */
+.collapse-btn {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  transform-origin: center;
+  transition: all 0.3s ease-in-out !important;
+}
+
+.collapse-btn:hover {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.collapse-btn.rotate-180 {
+  transform: rotate(180deg);
 }
 </style>

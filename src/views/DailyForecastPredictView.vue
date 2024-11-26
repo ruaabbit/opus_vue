@@ -19,7 +19,6 @@
         list-type="picture-card"
         :multiple="true"
         :limit="14"
-        
         :before-upload="validateBeforeUpload"
         :on-preview="showPreview"
         :on-success="handleUploadSuccess"
@@ -67,14 +66,20 @@
       <el-button
         type="primary"
         @click="submitPredictionRequest"
+        :loading="isLoading"
         :disabled="fileList.length !== 14 || !selectedDate || uploadedPaths.length !== 14"
       >
-        提交
+        {{ isLoading ? '分析中...' : '提交分析' }}
       </el-button>
     </div>
 
+    <!-- 加载动画 -->
+    <div v-if="isLoading" class="flex justify-center my-6">
+      <LoadingAnimation />
+    </div>
+
     <!-- 预测结果展示 -->
-    <div v-if="showResults" class="flex items-center justify-center w-full">
+    <div v-if="!isLoading && showResults" class="flex items-center justify-center w-full">
       <div v-if="images.length">
         <ArcticSeaIceViewer :images="images" />
       </div>
@@ -92,6 +97,7 @@
 import { ref, watch } from 'vue'
 import { Plus, ZoomIn, Delete, Check } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
+import LoadingAnimation from '@/components/LoadingAnimation.vue'
 import { useDayPrediction } from '@/common/api'
 import { ElMessage } from 'element-plus'
 
@@ -103,6 +109,7 @@ const fileList = ref([]) // 上传的文件列表
 const dialogImageUrl = ref('') // 预览图像的URL
 const dialogVisible = ref(false) // 控制预览对话框显示
 const uploadedPaths = ref([]) // 存储上传成功后的图片路径
+const isLoading = ref(false) // 添加加载状态
 
 // 监听文件列表变化
 watch(fileList, (newFiles) => {
@@ -174,7 +181,7 @@ const handleRemove = (uploadFile) => {
 }
 
 // 提交预测请求
-const submitPredictionRequest = () => {
+const submitPredictionRequest = async () => {
   if (!selectedDate.value) {
     ElMessage.error('请选择日期')
     return
@@ -190,15 +197,17 @@ const submitPredictionRequest = () => {
     return
   }
 
-  useDayPrediction(selectedDate.value, uploadedPaths.value)
-    .then((res) => {
-      images.value = res
-      showResults.value = true
-    })
-    .catch((error) => {
-      ElMessage.error('预测失败，请稍后重试')
-      console.error(error)
-    })
+  try {
+    isLoading.value = true
+    const res = await useDayPrediction(selectedDate.value, uploadedPaths.value)
+    images.value = res
+    showResults.value = true
+  } catch (error) {
+    ElMessage.error('预测失败，请稍后重试')
+    console.error(error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // 返回并重置表单
@@ -208,6 +217,7 @@ const handleBack = () => {
   selectedDate.value = null
   fileList.value = []
   uploadedPaths.value = []
+  isLoading.value = false
 }
 </script>
 
