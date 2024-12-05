@@ -122,7 +122,8 @@ const submitForm = async () => {
     isOK.value = true
     ElMessage.success('分析完成')
   } catch (error) {
-    ElMessage.error('分析失败，请重试')
+    isOK.value = false
+    ElMessage.error('分析失败，请重试', error)
     console.error('Analysis error:', error)
   } finally {
     isLoading.value = false

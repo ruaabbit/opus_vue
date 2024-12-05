@@ -203,6 +203,7 @@ const submitPredictionRequest = async () => {
     images.value = res
     showResults.value = true
   } catch (error) {
+    showResults.value = false
     ElMessage.error('预测失败，请稍后重试')
     console.error(error)
   } finally {

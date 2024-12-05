@@ -203,6 +203,7 @@ const submitPredictionRequest = async () => {
     showResults.value = true
     ElMessage.success('分析完成')
   } catch (error) {
+    showResults.value = false
     ElMessage.error('预测失败，请稍后重试')
     console.error(error)
   } finally {
