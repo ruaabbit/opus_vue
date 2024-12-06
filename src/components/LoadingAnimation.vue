@@ -1,6 +1,5 @@
 <template>
   <div class="loading-animation">
-    <!-- 加载动画，可以使用 SVG 或者 CSS 动画 -->
     <svg
       class="animate-spin h-8 w-8 text-blue-500"
       xmlns="http://www.w3.org/2000/svg"
@@ -20,16 +19,11 @@
   </div>
 </template>
 
-<script setup>
-// 如果需要添加脚本逻辑，可以在这里编写
-</script>
-
 <style scoped>
 .loading-animation {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* 根据需要添加样式 */
 }
 .animate-spin {
   animation: spin 1s linear infinite;

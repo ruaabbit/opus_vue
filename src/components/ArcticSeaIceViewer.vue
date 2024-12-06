@@ -12,7 +12,7 @@
       <img
         :src="currentImage.path"
         alt="Arctic Sea Ice Prediction"
-        class="cursor-pointer min-w-[450px] max-w-[800px]"
+        class="cursor-pointer w-full max-w-xl h-auto"
         @click="viewImage(currentImage)"
         @mouseover="showTooltip = true"
         @mouseleave="showTooltip = false"
@@ -101,8 +101,7 @@ import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 const props = defineProps({
   images: {
     type: Array,
-    required: true,
-    default: () => []
+    required: true
   }
 })
 
@@ -110,7 +109,7 @@ const selectedImage = ref(null)
 const currentImageIndex = ref(0)
 const currentImage = ref(null)
 const scale = ref(1)
-const interval = ref(1)
+const interval = ref(2)
 const isPaused = ref(false)
 const showTooltip = ref(false)
 const isLoading = ref(false)
@@ -125,15 +124,6 @@ const preloadImage = (imagePath) => {
   })
 }
 
-// 初始化 currentImage
-const initCurrentImage = () => {
-  if (props.images && props.images.length > 0) {
-    currentImage.value = props.images[currentImageIndex.value]
-  } else {
-    currentImage.value = null
-  }
-}
-
 const viewImage = (image) => {
   if (image) {
     selectedImage.value = image
@@ -142,8 +132,9 @@ const viewImage = (image) => {
 }
 
 const handleWheel = (event) => {
-  const delta = Math.max(-1, Math.min(1, event.deltaY))
-  scale.value = Math.max(0.1, Math.min(3, scale.value - delta * 0.1))
+  const delta = Math.sign(event.deltaY)
+  const newScale = Math.max(1, Math.min(3, scale.value - delta * 0.2))
+  scale.value = newScale
   event.preventDefault()
 }
 
@@ -199,27 +190,31 @@ const startInterval = () => {
 
 const togglePause = () => {
   isPaused.value = !isPaused.value
+  startInterval()
 }
 
 onMounted(() => {
-  initCurrentImage()
   startInterval()
 })
 
 onBeforeUnmount(() => {
-  clearInterval(intervalId)
+  if (intervalId) {
+    clearInterval(intervalId)
+    intervalId = null
+  }
 })
 
 watch(
   () => props.images,
   (newImages) => {
-    if (newImages && newImages.length > 0) {
+    if (newImages?.length > 0) {
       currentImageIndex.value = 0
-      currentImage.value = newImages[currentImageIndex.value]
+      currentImage.value = newImages[0]
     } else {
       currentImage.value = null
     }
-  }
+  },
+  { immediate: true } // 确保在组件挂载时立即触发
 )
 
 watch(interval, () => {
