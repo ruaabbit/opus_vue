@@ -3,6 +3,12 @@
     <h2 v-if="currentImage" class="mt-2 text-center text-5xl">{{ currentImage.date }}</h2>
 
     <div v-if="currentImage" class="relative flex justify-center items-center">
+      <div
+        v-if="isLoading"
+        class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-10"
+      >
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
       <img
         :src="currentImage.path"
         alt="Arctic Sea Ice Prediction"
@@ -107,6 +113,17 @@ const scale = ref(1)
 const interval = ref(1)
 const isPaused = ref(false)
 const showTooltip = ref(false)
+const isLoading = ref(false)
+
+// 预加载图片函数
+const preloadImage = (imagePath) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve()
+    img.onerror = reject
+    img.src = imagePath
+  })
+}
 
 // 初始化 currentImage
 const initCurrentImage = () => {
@@ -130,18 +147,39 @@ const handleWheel = (event) => {
   event.preventDefault()
 }
 
-const nextImage = () => {
+const nextImage = async () => {
   if (props.images && props.images.length > 0) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % props.images.length
-    currentImage.value = props.images[currentImageIndex.value]
+    isLoading.value = true
+    const nextIndex = (currentImageIndex.value + 1) % props.images.length
+
+    try {
+      // 预加载下一张图片
+      await preloadImage(props.images[nextIndex].path)
+      currentImageIndex.value = nextIndex
+      currentImage.value = props.images[currentImageIndex.value]
+    } catch (error) {
+      console.error('Failed to load next image:', error)
+    } finally {
+      isLoading.value = false
+    }
   }
 }
 
-const prevImage = () => {
+const prevImage = async () => {
   if (props.images && props.images.length > 0) {
-    currentImageIndex.value =
-      (currentImageIndex.value - 1 + props.images.length) % props.images.length
-    currentImage.value = props.images[currentImageIndex.value]
+    isLoading.value = true
+    const prevIndex = (currentImageIndex.value - 1 + props.images.length) % props.images.length
+
+    try {
+      // 预加载上一张图片
+      await preloadImage(props.images[prevIndex].path)
+      currentImageIndex.value = prevIndex
+      currentImage.value = props.images[currentImageIndex.value]
+    } catch (error) {
+      console.error('Failed to load previous image:', error)
+    } finally {
+      isLoading.value = false
+    }
   }
 }
 
@@ -149,11 +187,14 @@ let intervalId
 
 const startInterval = () => {
   clearInterval(intervalId)
-  intervalId = setInterval(() => {
-    if (!isPaused.value && props.images && props.images.length > 0) {
-      nextImage()
-    }
-  }, interval.value * 1000)
+  if (!isPaused.value) {
+    intervalId = setInterval(async () => {
+      // 如果正在加载，跳过这次切换
+      if (!isLoading.value) {
+        await nextImage()
+      }
+    }, interval.value * 1000)
+  }
 }
 
 const togglePause = () => {
