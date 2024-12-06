@@ -1,6 +1,19 @@
 <template>
   <div class="p-6 max-w-lg mx-auto bg-white shadow-md rounded-lg">
     <el-form :model="formData" label-width="120px" @submit.prevent="submitForm">
+      <!-- 数据范围 -->
+      <el-form-item label="数据范围">
+        <el-date-picker
+          v-model="formData.dataRange"
+          type="monthrange"
+          range-separator="至"
+          start-placeholder="开始月份"
+          end-placeholder="结束月份"
+          format="YYYYMM"
+          value-format="YYYYMM"
+        />
+      </el-form-item>
+
       <!-- 预报提前期 -->
       <el-form-item label="预报提前期">
         <el-input-number
@@ -16,22 +29,10 @@
         <el-date-picker
           v-model="formData.grad_month"
           type="month"
-          placeholder="选择月份"
+          placeholder="目标月份由数据范围和预报提前期决定"
           format="MM"
           value-format="MM"
-        />
-      </el-form-item>
-
-      <!-- 数据范围 -->
-      <el-form-item label="数据范围">
-        <el-date-picker
-          v-model="formData.dataRange"
-          type="monthrange"
-          range-separator="至"
-          start-placeholder="开始月份"
-          end-placeholder="结束月份"
-          format="YYYYMM"
-          value-format="YYYYMM"
+          disabled
         />
       </el-form-item>
 
@@ -74,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useDynamicsAnalysis } from '@/common/api'
 import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
 import LoadingAnimation from '../components/LoadingAnimation.vue'
@@ -89,6 +90,26 @@ const formData = ref({
   grad_lat_lon: '',
   grad_type: 'sum' // 默认选择海冰面积
 })
+
+// 监听数据范围和预报提前期的变化
+watch(
+  [() => formData.value.dataRange, () => formData.value.grad_forecast_month],
+  ([newDataRange, newForecastMonth]) => {
+    if (newDataRange && newDataRange[1] && newForecastMonth) {
+      // 获取结束月份
+      const endDate = new Date(
+        newDataRange[1].substring(0, 4),
+        parseInt(newDataRange[1].substring(4)) - 1
+      )
+      // 添加预报提前期
+      endDate.setMonth(endDate.getMonth() + newForecastMonth)
+      // 更新目标月份（只取月份部分）
+      formData.value.grad_month = String(endDate.getMonth() + 1).padStart(2, '0')
+    } else {
+      formData.value.grad_month = null
+    }
+  }
+)
 
 const images = ref([])
 const isOK = ref(false)
