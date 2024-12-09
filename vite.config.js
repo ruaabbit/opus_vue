@@ -7,9 +7,6 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
-
-
-
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/seaice/',
@@ -17,8 +14,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         sanitizeFileName: (name) => {
-          const sanitized = name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-          return sanitized.startsWith('_') ? `file${sanitized}` : sanitized;
+          const sanitized = name.replace(/[^a-zA-Z0-9_.-]/g, '_')
+          return sanitized.startsWith('_') ? `file${sanitized}` : sanitized
         }
       }
     }
@@ -26,13 +23,11 @@ export default defineConfig({
   plugins: [
     vue(),
     AutoImport({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [ElementPlusResolver()]
     }),
     Components({
-      resolvers: [ElementPlusResolver()],
-    }),
-
-
+      resolvers: [ElementPlusResolver()]
+    })
   ],
 
   resolve: {

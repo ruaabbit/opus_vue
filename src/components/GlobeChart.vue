@@ -1,16 +1,33 @@
 <template>
   <div class="w-[640px] h-[640px]">
-    <v-chart :option="option" />
+    <v-chart v-if="isEChartsReady" :option="option" />
+    <div v-else class="w-full h-full flex items-center justify-center">加载中，请稍后…</div>
   </div>
 </template>
 
 <script setup>
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { GlobeComponent } from 'echarts-gl/components' // Import Globe from echarts-gl
-import { Lines3DChart } from 'echarts-gl/charts' // For adding lines and other 3D features
+import { ref, provide, onMounted } from 'vue'
 import VChart, { THEME_KEY } from 'vue-echarts'
-import { ref, provide } from 'vue'
+
+const isEChartsReady = ref(false)
+
+// Dynamic imports for ECharts components
+const initECharts = async () => {
+  const { use } = await import('echarts/core')
+  const { CanvasRenderer } = await import('echarts/renderers')
+  const { GlobeComponent } = await import('echarts-gl/components')
+  const { Lines3DChart } = await import('echarts-gl/charts')
+
+  use([CanvasRenderer, GlobeComponent, Lines3DChart])
+  isEChartsReady.value = true
+}
+
+provide(THEME_KEY, 'dark')
+
+// Initialize ECharts components in onMounted
+onMounted(async () => {
+  await initECharts()
+})
 
 const props = defineProps({
   baseTexture: {
@@ -70,9 +87,6 @@ const props = defineProps({
     default: () => []
   }
 })
-
-use([CanvasRenderer, GlobeComponent, Lines3DChart]) // Use the Globe and 3D lines
-provide(THEME_KEY, 'dark')
 
 const option = ref({
   globe: {

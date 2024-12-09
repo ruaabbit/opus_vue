@@ -12,11 +12,13 @@
       :distance="200"
       :series="linesData"
     />
+    <!-- <GlobeChartGlobeGL :auto-rotate="true" :target-coord="[120, 30]" :series="linesData" /> -->
   </div>
 </template>
 
 <script setup>
 import GlobeChart from '../components/GlobeChart.vue'
+// import GlobeChartGlobeGL from '../components/GlobeChartGlobeGL.vue'
 
 const linesData = [
   {
