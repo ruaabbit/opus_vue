@@ -96,7 +96,7 @@ import { ref, watch } from 'vue'
 import { Plus, ZoomIn, Delete, Check } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
-import { useMonthPrediction } from '@/common/api'
+import { useMonthPrediction, getMonthPredictionResult } from '@/common/api'
 import { ElMessage } from 'element-plus'
 
 // 状态管理
@@ -108,6 +108,8 @@ const dialogImageUrl = ref('') // 预览图像的URL
 const dialogVisible = ref(false) // 控制预览对话框显示
 const uploadedPaths = ref([]) // 存储上传成功后的图片路径
 const isLoading = ref(false) // 添加 isLoading 状态
+const taskId = ref(null)
+const pollingInterval = ref(null)
 
 // 监听文件列表变化
 watch(fileList, (newFiles) => {
@@ -178,6 +180,30 @@ const handleRemove = (uploadFile) => {
   ElMessage.warning(`还需上传${12 - fileList.value.length}张图片`)
 }
 
+// 轮询获取预测结果
+const pollPredictionResult = async () => {
+  if (!taskId.value) return
+
+  try {
+    const result = await getMonthPredictionResult(taskId.value)
+    if (result.length != 0) {
+      images.value = result
+      showResults.value = true
+      clearInterval(pollingInterval.value)
+      isLoading.value = false
+    } else {
+      clearInterval(pollingInterval.value)
+      isLoading.value = false
+      ElMessage.error('预测失败，请稍后重试')
+    }
+  } catch (error) {
+    clearInterval(pollingInterval.value)
+    isLoading.value = false
+    ElMessage.error('获取预测结果失败，请稍后重试')
+    console.error(error)
+  }
+}
+
 // 提交预测请求
 const submitPredictionRequest = async () => {
   if (!selectedDate.value) {
@@ -186,7 +212,7 @@ const submitPredictionRequest = async () => {
   }
 
   if (fileList.value.length !== 12) {
-    ElMessage.error(`请上传正好12张图片，当前已上传${fileList.value.length}张`)
+    ElMessage.error(`请上传正好12张图片, 当前已上传${fileList.value.length}张`)
     return
   }
 
@@ -199,14 +225,14 @@ const submitPredictionRequest = async () => {
     isLoading.value = true
     const formattedDate = `${selectedDate.value.getFullYear()}/${(selectedDate.value.getMonth() + 1).toString().padStart(2, '0')}/${selectedDate.value.getDate().toString().padStart(2, '0')}`
     const res = await useMonthPrediction(formattedDate, uploadedPaths.value)
-    images.value = res
-    showResults.value = true
-    ElMessage.success('分析完成')
+    taskId.value = res.task_id
+
+    // 开始轮询结果
+    pollingInterval.value = setInterval(pollPredictionResult, 2000) // 每2秒轮询一次
   } catch (error) {
     showResults.value = false
-    ElMessage.error('预测失败，请稍后重试')
+    ElMessage.error('提交预测请求失败，请稍后重试')
     console.error(error)
-  } finally {
     isLoading.value = false
   }
 }
@@ -215,10 +241,13 @@ const submitPredictionRequest = async () => {
 const handleBack = () => {
   showResults.value = false
   images.value = []
-  selectedDate.value = null
+  taskId.value = null
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value)
+  }
   fileList.value = []
   uploadedPaths.value = []
-  isLoading.value = false
+  selectedDate.value = null
 }
 </script>
 
