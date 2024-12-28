@@ -1,13 +1,16 @@
 <template>
   <div class="w-[640px] h-[640px]">
     <v-chart v-if="isEChartsReady" :option="option" />
-    <div v-else class="w-full h-full flex items-center justify-center">加载中，请稍后…</div>
+    <div v-else class="w-full h-full flex items-center justify-center">
+      <LoadingAnimation />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, provide, onMounted } from 'vue'
 import VChart, { THEME_KEY } from 'vue-echarts'
+import LoadingAnimation from './LoadingAnimation.vue'
 
 const isEChartsReady = ref(false)
 

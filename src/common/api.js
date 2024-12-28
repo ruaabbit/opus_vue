@@ -86,10 +86,19 @@ export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_
         grad_month: grad_month
       }
     })
-    const data = response.data
-    return data
+    return response.data
   } catch (error) {
     console.error('Error fetching dynamics analysis:', error)
-    return []
+    throw error
+  }
+}
+
+export async function getDynamicsAnalysisResult(taskId) {
+  try {
+    const response = await request.get(`/dynamics-analysis/${taskId}`)
+    return response.data
+  } catch (error) {
+    console.error('Error fetching dynamics analysis result:', error)
+    throw error
   }
 }

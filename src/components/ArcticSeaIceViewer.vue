@@ -59,7 +59,7 @@
 
     <div
       v-if="selectedImage"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-[9999]"
       @wheel="handleWheel"
       @click.self="selectedImage = null"
     >
