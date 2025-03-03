@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-wrap justify-center bg-black h-[85vh]">
+  <div class="globe-container">
     <GlobeChart
       :baseTexture="'picture/globe-texture/world.topo.bathy.200401.jpg'"
       :heightTexture="'picture/globe-texture/bathymetry_bw_composite_4k.jpg'"
@@ -48,3 +48,13 @@ const linesData = [
   }
 ]
 </script>
+
+<style>
+.globe-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  background-color: black;
+  height: 85vh;
+}
+</style>

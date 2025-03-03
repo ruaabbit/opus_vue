@@ -4,7 +4,7 @@
     v-model:selected-date="selectedDate"
     :get-prediction-result="getDayPredictionResult"
     :submit-prediction-request="useDayPrediction"
-    class="w-full max-w-[800px] mx-auto"
+    class="full-width predictor-container"
   >
     <template #date-picker>
       <el-date-picker
@@ -13,7 +13,7 @@
         placeholder="选择日期"
         format="YYYY/MM/DD"
         value-format="YYYY/MM/DD"
-        class="w-full max-w-[300px]"
+        class="full-width date-picker"
       />
     </template>
   </ImageUploadPredictor>
@@ -26,3 +26,19 @@ import { useDayPrediction, getDayPredictionResult } from '@/common/api'
 
 const selectedDate = ref(null)
 </script>
+
+<style scoped>
+.full-width {
+  width: 100%;
+}
+
+.predictor-container {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.date-picker {
+  max-width: 300px;
+}
+</style>

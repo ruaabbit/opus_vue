@@ -1,7 +1,7 @@
 <template>
-  <div class="container mx-auto flex max-h-screen">
-    <div class="flex flex-col items-end w-full">
-      <div class="flex items-center justify-center w-full">
+  <div class="main-container">
+    <div class="content-wrapper">
+      <div class="viewer-container">
         <div v-if="isLoading">
           <!-- 显示加载动画 -->
           <LoadingAnimation />
@@ -30,3 +30,25 @@ onMounted(() => {
   })
 })
 </script>
+
+<style scoped>
+.main-container {
+  margin: 0 auto;
+  display: flex;
+  max-height: 100vh;
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.viewer-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+</style>

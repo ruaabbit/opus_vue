@@ -1,20 +1,20 @@
 <template>
   <el-config-provider :locale="zhCn">
-    <el-container class="min-h-screen">
+    <el-container class="container-full-height">
       <!-- Sider with dark theme -->
       <el-aside
         :width="isCollapse ? '64px' : '200px'"
-        class="transition-all bg-[#001529] overflow-hidden"
+        class="sidebar-transition dark-bg sidebar-overflow"
       >
-        <div class="h-full flex flex-col">
-          <div class="flex justify-center items-center h-16 my-4 flex-shrink-0">
-            <img src="@/assets/logo_01.svg" class="max-h-full object-contain" alt="OUC AI GROUP" />
-            <strong v-show="!isCollapse" class="text-white ml-2">OUC AI GROUP</strong>
+        <div class="sidebar-container">
+          <div class="logo-container">
+            <img src="@/assets/logo_01.svg" class="logo-image" alt="OUC AI GROUP" />
+            <strong v-show="!isCollapse" class="logo-text">OUC AI GROUP</strong>
           </div>
 
           <el-menu
             :collapse="isCollapse"
-            class="flex-1 border-none !h-auto rounded-menu"
+            class="menu-container"
             :default-active="activeRoute"
             @select="handleSelect"
             background-color="#001529"
@@ -56,31 +56,29 @@
 
       <el-container>
         <!-- Header -->
-        <el-header class="bg-gradient-to-r from-[#001529] to-[#003192] p-0 shadow-md">
-          <div class="flex justify-between items-center px-6 h-full">
+        <el-header class="header">
+          <div class="header-container">
             <el-button
               aria-label="Collapse Menu"
               @click="toggleCollapse"
-              class="collapse-btn !p-2 rounded-full hover:bg-opacity-90 transition-all duration-300"
+              class="collapse-btn"
               :class="{ 'rotate-180': !isCollapse }"
             >
-              <el-icon :size="20" class="text-white">
+              <el-icon :size="20" class="btn-icon">
                 <component :is="isCollapse ? Expand : Fold" />
               </el-icon>
             </el-button>
 
-            <div class="text-center flex-1">
-              <h1 class="text-white text-2xl font-bold mb-1">
-                北极海冰时空多尺度预报基础模型 MetaICE
-              </h1>
-              <p class="text-gray-200 text-base m-0">
+            <div class="header-title">
+              <h1 class="main-title">北极海冰时空多尺度预报基础模型 MetaICE</h1>
+              <p class="sub-title">
                 MetaICE: Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting
               </p>
             </div>
             <a
               href="https://kmrvyozrlx.k.topthink.com/@oucaigroup/readme.html"
               target="_blank"
-              class="text-white hover:text-blue-300 text-lg font-medium no-underline"
+              class="about-link"
             >
               关于我们
             </a>
@@ -88,14 +86,14 @@
         </el-header>
 
         <!-- Content -->
-        <el-main class="p-6 bg-[#f0f2f5]">
-          <div class="bg-white p-6 min-h-[360px] rounded-lg shadow-sm">
+        <el-main class="main-content">
+          <div class="content-container">
             <router-view></router-view>
           </div>
         </el-main>
 
         <!-- Footer -->
-        <el-footer class="text-center text-gray-600 py-4">
+        <el-footer class="footer">
           OUC AI GROUP 2024 Copyright by 中国海洋大学人工智能研究院
         </el-footer>
       </el-container>
@@ -140,6 +138,173 @@ const toggleCollapse = () => {
 </script>
 
 <style>
+/* 容器相关样式 */
+.container-full-height {
+  min-height: 100vh;
+}
+
+/* 侧边栏样式 */
+.sidebar-transition {
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.5, 1); /* 使用更平滑的贝塞尔曲线 */
+  will-change: width; /* 提示浏览器提前做好变化准备 */
+  overflow-x: hidden; /* 防止内容溢出 */
+}
+
+.dark-bg {
+  background-color: #001529;
+}
+
+.sidebar-overflow {
+  overflow: hidden;
+}
+
+.sidebar-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Logo 区域样式 */
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 4rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-shrink: 0;
+  padding: 0 10px;
+}
+
+.logo-image {
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+}
+
+.logo-text {
+  color: white;
+  margin-left: 0.5rem;
+  transition: opacity 0.2s ease; /* 添加不透明度过渡 */
+}
+
+/* 菜单容器样式 */
+.menu-container {
+  flex: 1;
+  border: none;
+  height: auto !important;
+  padding: 4px;
+}
+
+/* 菜单项样式在元素样式部分 */
+
+/* 头部样式 */
+.header {
+  background: linear-gradient(135deg, #001529, #003192);
+  padding: 0;
+  box-shadow: 0 4px 10px -1px rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 70px !important;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  height: 100%;
+}
+
+/* 折叠按钮样式 */
+.collapse-btn {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  transform-origin: center;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) !important; /* 更平滑的过渡 */
+  padding: 0.5rem !important;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(4px);
+  will-change: transform; /* 提示浏览器准备变换 */
+}
+
+.collapse-btn:hover {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  transform: scale(1.05);
+}
+
+.collapse-btn.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.btn-icon {
+  color: white;
+}
+
+/* 标题样式 */
+.header-title {
+  text-align: center;
+  flex: 1;
+}
+
+.main-title {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.sub-title {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* 关于我们链接 */
+.about-link {
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 500;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.about-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* 内容区域 */
+.main-content {
+  padding: 1.5rem;
+  background-color: #f5f7fa;
+  transition: all 0.3s ease;
+}
+
+.content-container {
+  background-color: white;
+  padding: 1.5rem;
+  min-height: 360px;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 页脚 */
+.footer {
+  text-align: center;
+  color: #606266;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  font-size: 0.9rem;
+  border-top: 1px solid #ebeef5;
+}
+
 /* 深色主题菜单样式 */
 .el-menu {
   border-right: none;
@@ -148,21 +313,23 @@ const toggleCollapse = () => {
 .el-menu-item {
   height: 50px;
   line-height: 50px;
-  margin: 4px 8px; /* 添加间距 */
-  border-radius: 8px; /* 添加圆角 */
+  margin: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1); /* 与侧边栏相同的过渡曲线 */
 }
 
 /* 悬停状态 */
 .el-menu-item:hover {
-  background-color: #1890ff !important;
-  border-radius: 8px; /* 保持圆角 */
+  background-color: rgba(24, 144, 255, 0.8) !important;
+  transform: translateX(5px);
 }
 
 /* 激活状态 */
 .el-menu-item.is-active {
   background-color: #1890ff !important;
   color: #ffffff !important;
-  border-radius: 8px; /* 保持圆角 */
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 折叠状态下的样式调整 */
@@ -170,14 +337,10 @@ const toggleCollapse = () => {
   margin: 4px 2px; /* 折叠时减小间距 */
 }
 
-/* 去除侧边栏滚动条 */
-.el-aside {
-  transition: width 0.3s ease;
-}
-
 /* 调整菜单容器高度 */
 .el-menu--collapse {
   width: 64px;
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
 }
 
 /* 调整内容区域的过渡效果 */
@@ -191,28 +354,23 @@ const toggleCollapse = () => {
   margin-right: 5px;
 }
 
-/* 优化标题栏阴影效果 */
-.el-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
+/* 响应式设计优化 */
+@media (max-width: 768px) {
+  .main-title {
+    font-size: 1.2rem;
+  }
 
-/* 圆角菜单容器 */
-.rounded-menu {
-  padding: 4px; /* 为菜单项留出空间 */
-}
+  .sub-title {
+    font-size: 0.8rem;
+  }
 
-/* 折叠按钮样式 */
-.collapse-btn {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  transform-origin: center;
-  transition: all 0.3s ease-in-out !important;
-}
+  .header-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 
-.collapse-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25) !important;
-}
-
-.collapse-btn.rotate-180 {
-  transform: rotate(180deg);
+  .content-container {
+    padding: 1rem;
+  }
 }
 </style>

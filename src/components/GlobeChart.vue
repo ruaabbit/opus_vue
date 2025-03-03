@@ -1,7 +1,7 @@
 <template>
-  <div class="w-[640px] h-[640px]">
+  <div class="globe-container">
     <v-chart v-if="isEChartsReady" :option="option" />
-    <div v-else class="w-full h-full flex items-center justify-center">
+    <div v-else class="loading-container">
       <LoadingAnimation />
     </div>
   </div>
@@ -121,3 +121,18 @@ const option = ref({
   series: props.series
 })
 </script>
+
+<style scoped>
+.globe-container {
+  width: 640px;
+  height: 640px;
+}
+
+.loading-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

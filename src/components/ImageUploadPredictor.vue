@@ -1,13 +1,13 @@
 <template>
-  <div class="container mx-auto flex flex-col items-center max-h-screen p-4 space-y-4">
+  <div class="main-container">
     <!-- 返回按钮 -->
-    <el-button v-if="showResults" class="self-start" @click="handleBack"> 返回 </el-button>
+    <el-button v-if="showResults" class="back-button" @click="handleBack"> 返回 </el-button>
 
     <!-- 表单内容 -->
-    <div v-if="!showResults" class="space-y-4">
+    <div v-if="!showResults" class="form-content">
       <!-- 上传提示 -->
-      <div class="text-center mb-4">
-        <p class="text-gray-600">
+      <div class="upload-hint">
+        <p class="hint-text">
           请上传正好{{ imageLimit }}张PNG图片 (已上传: {{ fileList.length }}/{{ imageLimit }})
         </p>
       </div>
@@ -34,8 +34,8 @@
             <div class="upload-text">上传</div>
           </div>
           <div v-else class="upload-trigger">
-            <el-icon class="upload-icon text-green-500"><Check /></el-icon>
-            <div class="upload-text text-green-500">已完成</div>
+            <el-icon class="upload-icon-success"><Check /></el-icon>
+            <div class="upload-text-success">已完成</div>
           </div>
         </template>
 
@@ -71,21 +71,21 @@
     </div>
 
     <!-- 加载动画 -->
-    <div v-if="isLoading" class="flex justify-center my-6">
+    <div v-if="isLoading" class="loading-container">
       <LoadingAnimation />
     </div>
 
     <!-- 预测结果展示 -->
-    <div v-if="!isLoading && showResults" class="flex items-center justify-center w-full">
+    <div v-if="!isLoading && showResults" class="results-container">
       <div v-if="images.length">
         <ArcticSeaIceViewer :images="images" />
       </div>
-      <div v-else class="text-center text-gray-500">请上传图片并选择日期以查看预测结果</div>
+      <div v-else class="empty-results">请上传图片并选择日期以查看预测结果</div>
     </div>
 
     <!-- 图片预览对话框 -->
     <el-dialog v-model="dialogVisible" title="预览">
-      <img w-full :src="dialogImageUrl" alt="Preview Image" />
+      <img class="preview-image" :src="dialogImageUrl" alt="Preview Image" />
     </el-dialog>
   </div>
 </template>
@@ -249,6 +249,40 @@ const handleBack = () => {
 </script>
 
 <style scoped>
+.main-container {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-height: 100vh;
+  padding: 1rem;
+}
+
+.main-container > * + * {
+  margin-top: 1rem;
+}
+
+.back-button {
+  align-self: flex-start;
+}
+
+.form-content {
+  margin-top: 1rem;
+}
+
+.form-content > * + * {
+  margin-top: 1rem;
+}
+
+.upload-hint {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.hint-text {
+  color: #606266;
+}
+
 .upload-demo {
   width: 100%;
   max-width: 800px;
@@ -269,9 +303,43 @@ const handleBack = () => {
   margin-bottom: 8px;
 }
 
+.upload-icon-success {
+  font-size: 28px;
+  color: #10b981;
+  margin-bottom: 8px;
+}
+
 .upload-text {
   color: #8c939d;
   font-size: 14px;
+}
+
+.upload-text-success {
+  color: #10b981;
+  font-size: 14px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.results-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.empty-results {
+  text-align: center;
+  color: #909399;
+}
+
+.preview-image {
+  width: 100%;
 }
 
 :deep(.el-upload--picture-card) {

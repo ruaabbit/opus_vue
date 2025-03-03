@@ -1,5 +1,5 @@
 <template>
-  <div ref="globeContainer"></div>
+  <div ref="globeContainer" class="globe-container"></div>
 </template>
 
 <script setup>
@@ -132,3 +132,12 @@ defineExpose({
   globeInstance
 })
 </script>
+
+<style scoped>
+.globe-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+</style>

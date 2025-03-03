@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-col md:flex-row gap-4 p-4">
-    <div class="md:w-1/3 w-full">
+  <div class="container-layout">
+    <div class="sidebar">
       <!-- <ImageSelector /> -->
     </div>
-    <div class="md:w-1/3 w-full">
-      <div class="md:w-1/3 w-full">
+    <div class="main-content">
+      <div class="sidebar">
         <!-- <ImageSelector /> -->
       </div>
       <el-card class="box-card">
@@ -50,8 +50,8 @@
 
           <el-form-item label="分析目标">
             <el-radio-group v-model="formData.grad_type">
-              <el-radio label="sum">海冰面积</el-radio>
-              <el-radio label="variation">海冰变化</el-radio>
+              <el-radio value="sum">海冰面积</el-radio>
+              <el-radio value="variation">海冰变化</el-radio>
             </el-radio-group>
           </el-form-item>
 
@@ -62,13 +62,13 @@
           </el-form-item>
         </el-form>
 
-        <div v-if="isLoading" class="flex justify-center my-6">
+        <div v-if="isLoading" class="loading-container">
           <LoadingAnimation />
         </div>
 
-        <div v-if="!isLoading && isOK" class="mt-6">
-          <h3 class="text-lg font-semibold mb-2">分析结果热图</h3>
-          <ArcticSeaIceViewer :images="images" alt="分析结果热图" class="w-full" />
+        <div v-if="!isLoading && isOK" class="result-section">
+          <h3 class="result-title">分析结果热图</h3>
+          <ArcticSeaIceViewer :images="images" alt="分析结果热图" class="full-width" />
         </div>
       </el-card>
     </div>
@@ -186,5 +186,55 @@ onUnmounted(() => {
 <style scoped>
 .el-form-item {
   margin-bottom: 20px;
+}
+
+.container-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sidebar {
+  width: 100%;
+}
+
+.main-content {
+  width: 100%;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.result-section {
+  margin-top: 1.5rem;
+}
+
+.result-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .container-layout {
+    flex-direction: row;
+  }
+
+  .sidebar {
+    width: 33.333%;
+  }
+
+  .main-content {
+    width: 33.333%;
+  }
 }
 </style>

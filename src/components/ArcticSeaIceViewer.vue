@@ -1,48 +1,45 @@
 <template>
-  <div class="flex flex-col items-center">
-    <h2 v-if="currentImage" class="mt-2 text-center text-5xl">{{ currentImage.date }}</h2>
+  <div class="container-flex">
+    <h2 v-if="currentImage" class="title">{{ currentImage.date }}</h2>
 
-    <div v-if="currentImage" class="relative flex justify-center items-center">
-      <div
-        v-if="isLoading"
-        class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 z-10"
-      >
-        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+    <div v-if="currentImage" class="image-container">
+      <div v-if="isLoading" class="loading-overlay">
+        <div class="loading-spinner"></div>
       </div>
       <img
         :src="currentImage.path"
         alt="Arctic Sea Ice Prediction"
-        class="cursor-pointer w-full max-w-xl h-auto"
+        class="image"
         @click="viewImage(currentImage)"
         @mouseover="showTooltip = true"
         @mouseleave="showTooltip = false"
       />
-      <div v-if="showTooltip" class="absolute bottom-0 mb-2 px-2 py-1 text-white bg-black rounded">
-        点击图片可以放大查看
-      </div>
+      <div v-if="showTooltip" class="tooltip">点击图片可以放大查看</div>
     </div>
 
-    <div class="grid grid-cols-3 gap-4 mt-4">
+    <div class="button-grid">
       <button
         @click="prevImage"
-        class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+        class="button"
+        :class="{ 'button-disabled': currentImageIndex === 0 }"
         :disabled="currentImageIndex === 0"
       >
         上一张
       </button>
-      <button @click="togglePause" class="px-4 py-2 bg-blue-500 text-white rounded">
+      <button @click="togglePause" class="button">
         {{ isPaused ? '点击继续' : '点击暂停' }}
       </button>
       <button
         @click="nextImage"
-        class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-400 disabled:cursor-not-allowed"
+        class="button"
+        :class="{ 'button-disabled': !images?.length || currentImageIndex === images.length - 1 }"
         :disabled="!images?.length || currentImageIndex === images.length - 1"
       >
         下一张
       </button>
     </div>
 
-    <div class="w-full px-4 mt-4">
+    <div class="slider-container">
       <input
         id="intervalRange"
         type="range"
@@ -50,34 +47,26 @@
         max="3"
         step="0.1"
         v-model="interval"
-        class="w-full mt-2"
+        class="slider"
       />
-      <label for="intervalRange" class="block text-center mt-2"
-        >图片播放速度: {{ interval }}s</label
-      >
+      <label for="intervalRange" class="slider-label">图片播放速度: {{ interval }}s</label>
     </div>
 
     <div
       v-if="selectedImage"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-[9999]"
+      class="modal-overlay"
       @wheel="handleWheel"
       @click.self="selectedImage = null"
     >
-      <div
-        class="relative flex flex-col items-center justify-center max-w-full max-h-full transform transition-transform duration-300"
-        :style="{ transform: `scale(${scale})` }"
-      >
-        <img :src="selectedImage.path" alt="Large view" class="max-w-full max-h-full" />
-        <p class="absolute top-2 left-2 text-white bg-gray-900 px-2 rounded">
+      <div class="modal-content" :style="{ transform: `scale(${scale})` }">
+        <img :src="selectedImage.path" alt="Large view" class="modal-image" />
+        <p class="image-date">
           {{ selectedImage.date }}
         </p>
       </div>
-      <button
-        @click="selectedImage = null"
-        class="absolute top-2 right-2 text-white bg-gray-900 p-2 rounded-full hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
-      >
+      <button @click="selectedImage = null" class="close-button">
         <svg
-          class="w-6 h-6"
+          class="close-icon"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -221,3 +210,166 @@ watch(interval, () => {
   startInterval()
 })
 </script>
+
+<style>
+.container-flex {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.title {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 3rem;
+}
+
+.image-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  border-radius: 9999px;
+  height: 2rem;
+  width: 2rem;
+  border-top: 2px solid #3b82f6;
+  border-bottom: 2px solid #3b82f6;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.image {
+  cursor: pointer;
+  width: 100%;
+  max-width: 36rem;
+  height: auto;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: 0;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  color: white;
+  background-color: black;
+  border-radius: 0.25rem;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 0.25rem;
+}
+
+.button-disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.slider-container {
+  width: 100%;
+  padding: 0 1rem;
+  margin-top: 1rem;
+}
+
+.slider {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.slider-label {
+  display: block;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.75);
+  z-index: 9999;
+}
+
+.modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+.modal-image {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.image-date {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  color: white;
+  background-color: #111827;
+  padding: 0 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  color: white;
+  background-color: #111827;
+  padding: 0.5rem;
+  border-radius: 9999px;
+}
+
+.close-button:hover {
+  background-color: #374151;
+}
+
+.close-button:focus {
+  outline: none;
+  background-color: #374151;
+}
+
+.close-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+</style>
