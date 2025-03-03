@@ -313,9 +313,14 @@ const toggleCollapse = () => {
 .el-menu-item {
   height: 50px;
   line-height: 50px;
-  margin: 4px 8px;
+  margin: 4px 8px; /* 保持左右对称间距 */
+  padding: 0 16px !important; /* 强制固定内边距 */
   border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1); /* 与侧边栏相同的过渡曲线 */
+  transition:
+    all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1),
+    padding 0.3s ease; /* 添加 padding 过渡 */
+  display: flex !important;
+  align-items: center;
 }
 
 /* 悬停状态 */
@@ -332,9 +337,10 @@ const toggleCollapse = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* 折叠状态下的样式调整 */
 .el-menu--collapse .el-menu-item {
-  margin: 4px 2px; /* 折叠时减小间距 */
+  padding: 0 16px !important; /* 保持与展开状态相同的左右 padding */
+  margin: 4px 8px; /* 保持与展开状态相同的 margin */
+  justify-content: center;
 }
 
 /* 调整菜单容器高度 */
@@ -343,15 +349,35 @@ const toggleCollapse = () => {
   transition: width 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
 }
 
+.el-menu--collapse .el-icon {
+  margin-right: 0 !important; /* 折叠时移除右边距 */
+}
+
 /* 调整内容区域的过渡效果 */
 .el-main {
   transition: all 0.3s ease;
 }
 
-/* 确保图标垂直居中 */
 .el-menu-item .el-icon {
-  vertical-align: middle;
-  margin-right: 5px;
+  flex-shrink: 0;
+  width: 24px; /* 固定图标容器宽度 */
+  margin-right: 12px !important; /* 固定图标右边距 */
+  display: flex;
+  justify-content: center;
+}
+
+.el-menu-item > span {
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+  visibility: visible;
+  opacity: 1;
+}
+
+.el-menu--collapse .el-menu-item > span {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
 }
 
 /* 响应式设计优化 */
