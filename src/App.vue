@@ -2,18 +2,14 @@
   <el-config-provider :locale="zhCn">
     <el-container class="container-full-height">
       <!-- Sider with dark theme -->
-      <el-aside
-        :width="isCollapse ? '64px' : '200px'"
-        class="sidebar-transition dark-bg sidebar-overflow"
-      >
+      <el-aside width="200px" class="dark-bg sidebar-overflow">
         <div class="sidebar-container">
           <div class="logo-container">
             <img src="@/assets/logo_01.svg" class="logo-image" alt="OUC AI GROUP" />
-            <strong v-show="!isCollapse" class="logo-text">OUC AI GROUP</strong>
+            <strong class="logo-text">OUC AI GROUP</strong>
           </div>
 
           <el-menu
-            :collapse="isCollapse"
             class="menu-container"
             :default-active="activeRoute"
             @select="handleSelect"
@@ -58,30 +54,13 @@
         <!-- Header -->
         <el-header class="header">
           <div class="header-container">
-            <el-button
-              aria-label="Collapse Menu"
-              @click="toggleCollapse"
-              class="collapse-btn"
-              :class="{ 'rotate-180': !isCollapse }"
-            >
-              <el-icon :size="20" class="btn-icon">
-                <component :is="isCollapse ? Expand : Fold" />
-              </el-icon>
-            </el-button>
-
             <div class="header-title">
               <h1 class="main-title">北极海冰时空多尺度预报基础模型 MetaICE</h1>
               <p class="sub-title">
                 MetaICE: Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting
               </p>
             </div>
-            <a
-              href="https://kmrvyozrlx.k.topthink.com/@oucaigroup/readme.html"
-              target="_blank"
-              class="about-link"
-            >
-              关于我们
-            </a>
+            <a href="https://oucai.club/" target="_blank" class="about-link"> 关于我们 </a>
           </div>
         </el-header>
 
@@ -104,22 +83,12 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  House,
-  Calendar,
-  TrendCharts,
-  Histogram,
-  Share,
-  Lightning,
-  Expand,
-  Fold
-} from '@element-plus/icons-vue'
+import { House, Calendar, TrendCharts, Histogram, Share, Lightning } from '@element-plus/icons-vue'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const route = useRoute()
 const router = useRouter()
 const activeRoute = ref(route.path)
-const isCollapse = ref(false)
 
 watch(
   () => route.path,
@@ -131,10 +100,6 @@ watch(
 const handleSelect = (key) => {
   router.push(key)
 }
-
-const toggleCollapse = () => {
-  isCollapse.value = !isCollapse.value
-}
 </script>
 
 <style>
@@ -144,12 +109,6 @@ const toggleCollapse = () => {
 }
 
 /* 侧边栏样式 */
-.sidebar-transition {
-  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.5, 1); /* 使用更平滑的贝塞尔曲线 */
-  will-change: width; /* 提示浏览器提前做好变化准备 */
-  overflow-x: hidden; /* 防止内容溢出 */
-}
-
 .dark-bg {
   background-color: #001529;
 }
@@ -185,7 +144,9 @@ const toggleCollapse = () => {
 .logo-text {
   color: white;
   margin-left: 0.5rem;
-  transition: opacity 0.2s ease; /* 添加不透明度过渡 */
+  font-weight: 700; /* 增加字体粗细 */
+  font-size: 1.1rem; /* 可选：增加字体大小 */
+  letter-spacing: 0.5px; /* 可选：增加字间距 */
 }
 
 /* 菜单容器样式 */
@@ -195,8 +156,6 @@ const toggleCollapse = () => {
   height: auto !important;
   padding: 4px;
 }
-
-/* 菜单项样式在元素样式部分 */
 
 /* 头部样式 */
 .header {
@@ -214,31 +173,6 @@ const toggleCollapse = () => {
   padding-left: 1.5rem;
   padding-right: 1.5rem;
   height: 100%;
-}
-
-/* 折叠按钮样式 */
-.collapse-btn {
-  background-color: rgba(255, 255, 255, 0.15) !important;
-  transform-origin: center;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) !important; /* 更平滑的过渡 */
-  padding: 0.5rem !important;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  backdrop-filter: blur(4px);
-  will-change: transform; /* 提示浏览器准备变换 */
-}
-
-.collapse-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25) !important;
-  transform: scale(1.05);
-}
-
-.collapse-btn.rotate-180 {
-  transform: rotate(180deg);
-}
-
-.btn-icon {
-  color: white;
 }
 
 /* 标题样式 */
@@ -313,12 +247,10 @@ const toggleCollapse = () => {
 .el-menu-item {
   height: 50px;
   line-height: 50px;
-  margin: 4px 8px; /* 保持左右对称间距 */
-  padding: 0 16px !important; /* 强制固定内边距 */
+  margin: 4px 8px;
+  padding: 0 16px !important;
   border-radius: 8px;
-  transition:
-    all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1),
-    padding 0.3s ease; /* 添加 padding 过渡 */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
   display: flex !important;
   align-items: center;
 }
@@ -337,47 +269,12 @@ const toggleCollapse = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.el-menu--collapse .el-menu-item {
-  padding: 0 16px !important; /* 保持与展开状态相同的左右 padding */
-  margin: 4px 8px; /* 保持与展开状态相同的 margin */
-  justify-content: center;
-}
-
-/* 调整菜单容器高度 */
-.el-menu--collapse {
-  width: 64px;
-  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
-}
-
-.el-menu--collapse .el-icon {
-  margin-right: 0 !important; /* 折叠时移除右边距 */
-}
-
-/* 调整内容区域的过渡效果 */
-.el-main {
-  transition: all 0.3s ease;
-}
-
 .el-menu-item .el-icon {
   flex-shrink: 0;
-  width: 24px; /* 固定图标容器宽度 */
-  margin-right: 12px !important; /* 固定图标右边距 */
+  width: 24px;
+  margin-right: 12px !important;
   display: flex;
   justify-content: center;
-}
-
-.el-menu-item > span {
-  transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
-  visibility: visible;
-  opacity: 1;
-}
-
-.el-menu--collapse .el-menu-item > span {
-  opacity: 0;
-  visibility: hidden;
-  position: absolute;
 }
 
 /* 响应式设计优化 */

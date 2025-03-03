@@ -24,7 +24,7 @@ import { ref } from 'vue'
 import ImageUploadPredictor from '@/components/ImageUploadPredictor.vue'
 import { useMonthPrediction, getMonthPredictionResult } from '@/common/api'
 
-const selectedDate = ref(null)
+const selectedDate = ref('')
 </script>
 
 <style scoped>

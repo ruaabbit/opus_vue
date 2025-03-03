@@ -1,24 +1,16 @@
 <template>
   <div class="globe-container">
-    <GlobeChart
-      :baseTexture="'picture/globe-texture/world.topo.bathy.200401.jpg'"
-      :heightTexture="'picture/globe-texture/bathymetry_bw_composite_4k.jpg'"
-      :environment="'picture/globe-texture/starfield.jpg'"
-      :lightIntensity="5"
-      :autoRotate="true"
-      :targetCoord="[30, 60]"
-      :alpha="45"
-      :beta="10"
-      :distance="200"
+    <GlobeChartGlobeGL
+      :auto-rotate="true"
+      :target-coord="[0, 90]"
+      :camera-distance="2.0"
       :series="linesData"
     />
-    <!-- <GlobeChartGlobeGL :auto-rotate="true" :target-coord="[120, 30]" :series="linesData" /> -->
   </div>
 </template>
 
 <script setup>
-import GlobeChart from '../components/GlobeChart.vue'
-// import GlobeChartGlobeGL from '../components/GlobeChartGlobeGL.vue'
+import GlobeChartGlobeGL from '../components/GlobeChartGlobeGL.vue'
 
 const linesData = [
   {

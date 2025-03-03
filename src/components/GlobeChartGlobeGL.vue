@@ -121,9 +121,17 @@ function addSeriesData() {
 }
 
 onUnmounted(() => {
-  // Cleanup globe instance
+  // 清理 globe 实例
   if (globeInstance.value) {
-    globeInstance.value.destroy()
+    // Globe.gl 没有 destroy 方法，应该使用正确的方式清理
+    if (globeContainer.value) {
+      // 清空容器中的内容
+      while (globeContainer.value.firstChild) {
+        globeContainer.value.removeChild(globeContainer.value.firstChild)
+      }
+    }
+    // 移除引用
+    globeInstance.value = null
   }
 })
 
