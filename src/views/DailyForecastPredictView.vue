@@ -1,20 +1,10 @@
 <template>
-  <ImageUploadPredictor
-    :image-limit="14"
-    v-model:selected-date="selectedDate"
-    :get-prediction-result="getDayPredictionResult"
-    :submit-prediction-request="useDayPrediction"
-    class="full-width predictor-container"
-  >
+  <ImageUploadPredictor :imageLimit="14" :time-mode="'daily'" v-model:selected-date="selectedDate"
+    :get-prediction-result="getDayPredictionResult" :submit-prediction-request="useDayPrediction"
+    class="full-width predictor-container">
     <template #date-picker>
-      <el-date-picker
-        v-model="selectedDate"
-        type="date"
-        placeholder="选择日期"
-        format="YYYY/MM/DD"
-        value-format="YYYY/MM/DD"
-        class="full-width date-picker"
-      />
+      <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" format="YYYY/MM/DD"
+        value-format="YYYY/MM/DD" class="full-width date-picker" />
     </template>
   </ImageUploadPredictor>
 </template>
