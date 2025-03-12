@@ -10,7 +10,7 @@ const props = defineProps({
   // Texture paths
   baseTexture: {
     type: String,
-    default: 'picture/globe-texture/world.topo.bathy.200401.jpg'
+    default: 'picture/globe-texture/world.topo.bathy.200401-2.jpg'
   },
   heightTexture: {
     type: String,
