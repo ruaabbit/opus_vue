@@ -1,11 +1,6 @@
 <template>
   <div class="globe-container">
-    <GlobeChartGlobeGL
-      :auto-rotate="true"
-      :target-coord="[0, 90]"
-      :camera-distance="2.0"
-      :series="linesData"
-    />
+    <GlobeChartGlobeGL :auto-rotate="true" :target-coord="[0, 90]" :camera-distance="2.0" :series="linesData" />
   </div>
 </template>
 
