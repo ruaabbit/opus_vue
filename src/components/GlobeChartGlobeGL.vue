@@ -10,11 +10,11 @@ const props = defineProps({
   // Texture paths
   baseTexture: {
     type: String,
-    default: 'picture/globe-texture/world.topo.bathy.200401-2.jpg'
+    default: '/seaice/picture/globe-texture/world.topo.bathy.200401-2.jpg'
   },
   heightTexture: {
     type: String,
-    default: 'picture/globe-texture/bathymetry_bw_composite_4k.jpg'
+    default: '/seaice/picture/globe-texture/bathymetry_bw_composite_4k.jpg'
   },
   // Globe view control parameters
   autoRotate: {
