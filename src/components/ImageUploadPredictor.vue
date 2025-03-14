@@ -4,7 +4,8 @@
     <el-button v-if="showResults" class="back-button" @click="handleBack">
       <el-icon>
         <ArrowLeft />
-      </el-icon> 返回
+      </el-icon>
+      返回
     </el-button>
 
     <!-- 表单内容 -->
@@ -15,12 +16,16 @@
         <div class="upload-progress">
           <div class="progress-text">
             <span>已上传: </span>
-            <span :class="{ 'complete': fileList.length === props.imageLimit }">
+            <span :class="{ complete: fileList.length === props.imageLimit }">
               {{ fileList.length }}/{{ props.imageLimit }}
             </span>
           </div>
-          <el-progress :percentage="(fileList.length / props.imageLimit) * 100" :stroke-width="8" :show-text="false"
-            :status="fileList.length === props.imageLimit ? 'success' : ''" />
+          <el-progress
+            :percentage="(fileList.length / props.imageLimit) * 100"
+            :stroke-width="8"
+            :show-text="false"
+            :status="fileList.length === props.imageLimit ? 'success' : ''"
+          />
         </div>
         <p class="hint-text">请上传{{ props.imageLimit }}张PNG格式图片</p>
       </div>
@@ -33,10 +38,21 @@
 
       <!-- 图片上传区域 -->
       <div class="upload-area">
-        <el-upload v-model:file-list="fileList" class="image-uploader"
-          action="https://seaice.52lxy.one:20443/seaice/png-upload" accept=".png" list-type="picture-card"
-          :multiple="true" :limit="imageLimit" :before-upload="validateBeforeUpload" :on-preview="showPreview"
-          :on-success="handleUploadSuccess" :on-error="handleUploadError" :on-remove="handleRemove" :auto-upload="true">
+        <el-upload
+          v-model:file-list="fileList"
+          class="image-uploader"
+          action="https://seaice.52lxy.one:20443/seaice/png-upload"
+          accept=".png"
+          list-type="picture-card"
+          :multiple="true"
+          :limit="imageLimit"
+          :before-upload="validateBeforeUpload"
+          :on-preview="showPreview"
+          :on-success="handleUploadSuccess"
+          :on-error="handleUploadError"
+          :on-remove="handleRemove"
+          :auto-upload="true"
+        >
           <template #default>
             <div v-if="fileList.length < props.imageLimit" class="upload-trigger">
               <el-icon class="upload-icon">
@@ -80,9 +96,18 @@
 
       <!-- 提交按钮 -->
       <div class="submit-section">
-        <el-button type="primary" size="large" @click="submitPrediction" :loading="isLoading"
-          :disabled="fileList.length !== props.imageLimit || !selectedDate || uploadedPaths.length !== props.imageLimit"
-          class="submit-button">
+        <el-button
+          type="primary"
+          size="large"
+          @click="submitPrediction"
+          :loading="isLoading"
+          :disabled="
+            fileList.length !== props.imageLimit ||
+            !selectedDate ||
+            uploadedPaths.length !== props.imageLimit
+          "
+          class="submit-button"
+        >
           <el-icon v-if="!isLoading">
             <DataAnalysis />
           </el-icon>
@@ -119,7 +144,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { Plus, ZoomIn, Delete, Check } from '@element-plus/icons-vue'
+import { Plus, ZoomIn, Delete, Check, ArrowLeft, DataAnalysis } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
 import { ElMessage } from 'element-plus'
@@ -127,7 +152,7 @@ import { ElMessage } from 'element-plus'
 const props = defineProps({
   timeMode: {
     type: String,
-    required: true,
+    required: true
   },
   imageLimit: {
     type: Number,
@@ -159,61 +184,63 @@ const uploadedPaths = ref([])
 const isLoading = ref(false)
 const taskId = ref(null)
 const pollingInterval = ref(null)
-const selectedDate = ref(null);
-const imageDates = ref([]);
-
+const localSelectedDate = ref(null)
+const imageDates = ref([])
 
 // 监听selectedDate变化
-watch(() => props.selectedDate, (newDate) => {
-  selectedDate.value = newDate;
-  updateImageDates();
-});
+watch(
+  () => props.selectedDate,
+  (newDate) => {
+    localSelectedDate.value = newDate
+    updateImageDates()
+  }
+)
 
 // 监听文件列表变化
-watch(fileList, (newFiles) => {
-  updateImageDates();
-});
+watch(fileList, () => {
+  updateImageDates()
+})
 
 // 更新图片日期
 const updateImageDates = () => {
-  if (!selectedDate.value) return;
+  if (!localSelectedDate.value) return
 
-  const dates = [];
-  const baseDate = new Date(selectedDate.value);
+  const dates = []
+  const baseDate = new Date(localSelectedDate.value)
 
   for (let i = 0; i < props.imageLimit; i++) {
-    const date = new Date(baseDate);
+    const date = new Date(baseDate)
 
     if (props.timeMode === 'daily') {
-      date.setDate(date.getDate() + i);
+      date.setDate(date.getDate() + i)
     } else if (props.timeMode === 'monthly') {
-      date.setMonth(date.getMonth() + i);
+      date.setMonth(date.getMonth() + i)
     } else {
-      console.log("Unhandled timeMode:", props.timeMode);
+      console.log('Unhandled timeMode:', props.timeMode)
       // 可以添加默认行为或错误处理
     }
 
-    dates.push(formatDate(date));
+    dates.push(formatDate(date))
   }
 
-  imageDates.value = dates;
-};
+  imageDates.value = dates
+}
 
 // 格式化日期为 YYYY-MM-DD
 const formatDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 // 获取指定索引图片的日期
 const getImageDate = (index) => {
   if (!imageDates.value.length || index >= imageDates.value.length) {
-    return '未设置日期';
+    return '未设置日期'
   }
-  return imageDates.value[index];
-};
+  return imageDates.value[index]
+}
 
 // 监听文件列表变化
 watch(fileList, (newFiles) => {
@@ -342,7 +369,6 @@ const handleBack = () => {
   border-radius: 8px;
 }
 
-
 .upload-header {
   margin-bottom: 24px;
   text-align: center;
@@ -423,8 +449,6 @@ const handleBack = () => {
 .back-button {
   margin-bottom: 20px;
 }
-
-
 
 .upload-progress {
   margin: 16px auto;
@@ -605,7 +629,6 @@ const handleBack = () => {
   max-height: 70vh;
   object-fit: contain;
 }
-
 
 /* 响应式调整 */
 @media (max-width: 768px) {
