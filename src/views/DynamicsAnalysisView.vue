@@ -1,14 +1,18 @@
 <template>
   <div class="container-layout">
-    <div class="sidebar">
-      <!-- <ImageSelector /> -->
-    </div>
+    <!-- 移除或注释掉外层的sidebar，因为目前没有使用 -->
+    <!-- <div class="sidebar">
+      <!- <ImageSelector /> ->
+    </div> -->
+
     <div class="main-content">
-      <div class="sidebar">
-        <!-- <ImageSelector /> -->
-      </div>
+      <!-- 移除或注释掉内层的sidebar，因为目前没有使用 -->
+      <!-- <div class="sidebar">
+        <!- <ImageSelector /> ->
+      </div> -->
+
       <el-card class="box-card">
-        <el-form :model="formData" @submit.prevent="submitForm">
+        <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
           <el-form-item label="数据范围">
             <el-date-picker
               v-model="formData.dataRange"
@@ -67,8 +71,8 @@
         </div>
 
         <div v-if="!isLoading && isOK" class="result-section">
-          <h3 class="result-title">分析结果热图</h3>
-          <ArcticSeaIceViewer :images="images" alt="分析结果热图" class="full-width" />
+          <!-- 使用新的DynamicsAnalysisViewer组件替换ArcticSeaIceViewer -->
+          <DynamicsAnalysisViewer :images="images" class="full-width" />
         </div>
       </el-card>
     </div>
@@ -79,7 +83,7 @@
 import { ref, watch, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useDynamicsAnalysis, getDynamicsAnalysisResult } from '@/common/api'
-import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
+import DynamicsAnalysisViewer from '@/components/DynamicsAnalysisViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
 // import ImageSelector from '@/components/ImageSelector.vue'
 
@@ -195,12 +199,24 @@ onUnmounted(() => {
   padding: 1rem;
 }
 
+/* 移除未使用的sidebar样式或保留但设置宽度为0 */
 .sidebar {
-  width: 100%;
+  display: none; /* 完全隐藏sidebar */
 }
 
 .main-content {
   width: 100%;
+}
+
+.box-card {
+  width: 100%;
+  max-width: 1600px; /* 增加卡片最大宽度 */
+  margin: 0 auto;
+}
+
+.analysis-form {
+  max-width: 800px; /* 限制表单宽度，但让结果区域可以更宽 */
+  margin: 0 auto;
 }
 
 .loading-container {
@@ -211,30 +227,39 @@ onUnmounted(() => {
 }
 
 .result-section {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
+  width: 100%;
+  overflow-x: auto; /* 如果内容太宽，允许水平滚动 */
 }
 
 .result-title {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 
 .full-width {
   width: 100%;
+  max-width: 100%; /* 确保结果区域可以使用全部可用宽度 */
 }
 
+/* 响应式布局调整 */
 @media (min-width: 768px) {
   .container-layout {
     flex-direction: row;
   }
 
-  .sidebar {
-    width: 33.333%;
+  .main-content {
+    width: 100%; /* 全宽显示 */
+    max-width: none; /* 移除最大宽度限制 */
   }
 
-  .main-content {
-    width: 33.333%;
+  /* 以下两个样式可以移除，因为我们已经隐藏了sidebar */
+  /*
+  .sidebar {
+    width: 0;
   }
+  */
 }
 </style>
