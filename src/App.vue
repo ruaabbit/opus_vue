@@ -42,9 +42,14 @@
               <template #title>不确定性分析</template>
             </el-menu-item>
 
+            <el-menu-item index="/model-interpreter">
+              <el-icon><Lightning /></el-icon>
+              <template #title>逐日动力学分析</template>
+            </el-menu-item>
+
             <el-menu-item index="/dynamics-analysis">
               <el-icon><Lightning /></el-icon>
-              <template #title>动力学分析</template>
+              <template #title>逐月动力学分析</template>
             </el-menu-item>
           </el-menu>
         </div>
