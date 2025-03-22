@@ -7,7 +7,7 @@
           <LoadingAnimation />
         </div>
         <div v-else>
-          <ArcticSeaIceViewer :images="images" />
+          <SeaIceGlobe :images="images" />
         </div>
       </div>
     </div>
@@ -17,8 +17,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRealtimeMonthPrediction } from '@/common/api'
-import ArcticSeaIceViewer from '../components/ArcticSeaIceViewer.vue'
 import LoadingAnimation from '../components/LoadingAnimation.vue'
+import SeaIceGlobe from '../components/SeaIceGlobe.vue'
 
 const images = ref([])
 const isLoading = ref(true)
@@ -50,5 +50,6 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   width: 100%;
+  height: 80vh; /* 调整高度以适应地球 */
 }
 </style>
