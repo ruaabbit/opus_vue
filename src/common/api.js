@@ -76,14 +76,18 @@ export async function useRealtimeDayPrediction() {
   }
 }
 
-export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_month) {
+export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_month, x1, y1, x2, y2) {
   try {
     const response = await request.post('/dynamics-analysis', {
       data: {
         start_time: start_time,
         end_time: end_time,
         grad_type: grad_type,
-        grad_month: grad_month
+        grad_month: grad_month,
+        x1: x1,
+        y1: y1,
+        x2: x2,
+        y2: y2
       }
     })
     return response.data

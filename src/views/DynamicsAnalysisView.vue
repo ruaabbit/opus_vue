@@ -1,16 +1,6 @@
 <template>
   <div class="container-layout">
-    <!-- 移除或注释掉外层的sidebar，因为目前没有使用 -->
-    <!-- <div class="sidebar">
-      <!- <ImageSelector /> ->
-    </div> -->
-
     <div class="main-content">
-      <!-- 移除或注释掉内层的sidebar，因为目前没有使用 -->
-      <!-- <div class="sidebar">
-        <!- <ImageSelector /> ->
-      </div> -->
-
       <el-card class="box-card">
         <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
           <el-form-item label="数据范围">
@@ -45,11 +35,7 @@
           </el-form-item>
 
           <el-form-item label="分析范围">
-            <el-input
-              v-model="formData.grad_lat_lon"
-              disabled
-              placeholder="请输入经纬度范围（目前只支持全范围）"
-            />
+            <ImageSelector v-model:topLeft="topLeftCoord" v-model:bottomRight="bottomRightCoord" />
           </el-form-item>
 
           <el-form-item label="分析目标">
@@ -85,14 +71,18 @@ import { ElMessage } from 'element-plus'
 import { useDynamicsAnalysis, getDynamicsAnalysisResult } from '@/common/api'
 import DynamicsAnalysisViewer from '@/components/DynamicsAnalysisViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
-// import ImageSelector from '@/components/ImageSelector.vue'
+import ImageSelector from '@/components/ImageSelector.vue'
 
 const formData = ref({
   dataRange: [],
   grad_forecast_month: 1,
   grad_month: '',
   grad_lat_lon: '',
-  grad_type: 'sum'
+  grad_type: 'sum',
+  x1: null,
+  y1: null,
+  x2: null,
+  y2: null
 })
 
 const images = ref([])
@@ -100,6 +90,22 @@ const isOK = ref(false)
 const isLoading = ref(false)
 const currentTaskId = ref(null)
 
+const topLeftCoord = ref({ x: null, y: null })
+const bottomRightCoord = ref({ x: null, y: null })
+
+// 监听坐标变化并更新formData中的属性
+watch(
+  [topLeftCoord, bottomRightCoord],
+  ([newTopLeft, newBottomRight]) => {
+    formData.value.x1 = newTopLeft.y
+    formData.value.y1 = newTopLeft.x
+    formData.value.x2 = newBottomRight.y
+    formData.value.y2 = newBottomRight.x
+  },
+  { immediate: true, deep: true }
+)
+
+// 原有的watch保持不变
 watch(
   [() => formData.value.dataRange, () => formData.value.grad_forecast_month],
   ([newDataRange, newForecastMonth]) => {
@@ -161,7 +167,11 @@ const submitForm = async () => {
       formData.value.dataRange[0],
       formData.value.dataRange[1],
       formData.value.grad_type,
-      formData.value.grad_month
+      formData.value.grad_month,
+      formData.value.x1,
+      formData.value.y1,
+      formData.value.x2,
+      formData.value.y2
     )
 
     currentTaskId.value = res.task_id
