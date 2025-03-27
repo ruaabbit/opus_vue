@@ -30,30 +30,47 @@
         }"
       ></div>
     </div>
-    <div class="selection-info" v-if="lastSelection.isVisible">
-      <p>最后选择区域尺寸:</p>
-      <p>宽度: {{ Math.round(lastSelection.width) }}px</p>
-      <p>高度: {{ Math.round(lastSelection.height) }}px</p>
-      <p>角坐标:</p>
-      <p>左上: ({{ Math.round(lastSelection.left) }}, {{ Math.round(lastSelection.top) }})</p>
-      <p>
-        右上: ({{ Math.round(lastSelection.left + lastSelection.width) }},
-        {{ Math.round(lastSelection.top) }})
-      </p>
-      <p>
-        左下: ({{ Math.round(lastSelection.left) }},
-        {{ Math.round(lastSelection.top + lastSelection.height) }})
-      </p>
-      <p>
-        右下: ({{ Math.round(lastSelection.left + lastSelection.width) }},
-        {{ Math.round(lastSelection.top + lastSelection.height) }})
-      </p>
+    <div class="selection-info-container" v-if="lastSelection.isVisible">
+      <div class="selection-info">
+        <p>最后选择区域尺寸:</p>
+        <p>宽度: {{ Math.round(lastSelection.width) }}px</p>
+        <p>高度: {{ Math.round(lastSelection.height) }}px</p>
+        <p>角坐标:</p>
+        <p>左上: ({{ Math.round(lastSelection.left) }}, {{ Math.round(lastSelection.top) }})</p>
+        <p>
+          右上: ({{ Math.round(lastSelection.left + lastSelection.width) }},
+          {{ Math.round(lastSelection.top) }})
+        </p>
+        <p>
+          左下: ({{ Math.round(lastSelection.left) }},
+          {{ Math.round(lastSelection.top + lastSelection.height) }})
+        </p>
+        <p>
+          右下: ({{ Math.round(lastSelection.left + lastSelection.width) }},
+          {{ Math.round(lastSelection.top + lastSelection.height) }})
+        </p>
+      </div>
+      <button class="clear-button" @click="clearSelection">清除选择</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
+
+// 定义props和emits用于v-model双向绑定
+const props = defineProps({
+  topLeft: {
+    type: Object,
+    default: () => ({ x: null, y: null })
+  },
+  bottomRight: {
+    type: Object,
+    default: () => ({ x: null, y: null })
+  }
+})
+
+const emit = defineEmits(['update:topLeft', 'update:bottomRight'])
 
 const imageContainer = ref(null)
 const isSelecting = ref(false)
@@ -100,7 +117,58 @@ const endSelection = () => {
     lastSelection.width = selectionRect.width
     lastSelection.height = selectionRect.height
     lastSelection.isVisible = true
+
+    // 更新坐标到父组件
+    emit('update:topLeft', {
+      x: Math.round(lastSelection.left),
+      y: Math.round(lastSelection.top)
+    })
+
+    emit('update:bottomRight', {
+      x: Math.round(lastSelection.left + lastSelection.width),
+      y: Math.round(lastSelection.top + lastSelection.height)
+    })
   }
+}
+
+// 初始化时，如果props中有坐标，则显示选择框
+watch(
+  () => [props.topLeft, props.bottomRight],
+  ([newTopLeft, newBottomRight]) => {
+    if (
+      newTopLeft?.x !== null &&
+      newTopLeft?.y !== null &&
+      newBottomRight?.x !== null &&
+      newBottomRight?.y !== null
+    ) {
+      lastSelection.left = newTopLeft.x
+      lastSelection.top = newTopLeft.y
+      lastSelection.width = newBottomRight.x - newTopLeft.x
+      lastSelection.height = newBottomRight.y - newTopLeft.y
+      lastSelection.isVisible = true
+    } else {
+      // 如果有任何坐标为null，则不显示选择框
+      lastSelection.isVisible = false
+    }
+  },
+  { immediate: true }
+)
+
+const clearSelection = () => {
+  lastSelection.left = 0
+  lastSelection.top = 0
+  lastSelection.width = 0
+  lastSelection.height = 0
+  lastSelection.isVisible = false
+  
+  // 重置selectionRect，防止下次选择时出现异常行为
+  selectionRect.left = 0
+  selectionRect.top = 0
+  selectionRect.width = 0
+  selectionRect.height = 0
+
+  emit('update:topLeft', { x: null, y: null })
+  emit('update:bottomRight', { x: null, y: null })
 }
 </script>
 
@@ -138,9 +206,29 @@ img {
   pointer-events: none;
 }
 
+.selection-info-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .selection-info {
   padding: 10px;
   background-color: #f0f0f0;
   border-radius: 5px;
+}
+
+.clear-button {
+  margin-top: 10px;
+  padding: 5px 10px;
+  background-color: #ff0000;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.clear-button:hover {
+  background-color: #cc0000;
 }
 </style>

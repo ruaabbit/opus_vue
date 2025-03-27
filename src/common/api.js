@@ -76,14 +76,18 @@ export async function useRealtimeDayPrediction() {
   }
 }
 
-export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_month) {
+export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_month, x1, y1, x2, y2) {
   try {
     const response = await request.post('/dynamics-analysis', {
       data: {
         start_time: start_time,
         end_time: end_time,
         grad_type: grad_type,
-        grad_month: grad_month
+        grad_month: grad_month,
+        x1: x1,
+        y1: y1,
+        x2: x2,
+        y2: y2
       }
     })
     return response.data
@@ -99,6 +103,33 @@ export async function getDynamicsAnalysisResult(taskId) {
     return response.data
   } catch (error) {
     console.error('Error fetching dynamics analysis result:', error)
+    throw error
+  }
+}
+
+export async function useModelInterpreter(start_time, end_time, grad_type, grad_day) {
+  try {
+    const response = await request.post('/model-interpreter', {
+      data: {
+        start_time: start_time,
+        end_time: end_time,
+        grad_type: grad_type,
+        grad_day: grad_day
+      }
+    })
+    return response.data
+  } catch (error) {
+    console.error('Error fetching model interpreter:', error)
+    throw error
+  }
+}
+
+export async function getModelInterpreter(taskId) {
+  try {
+    const response = await request.get(`/model-interpreter/${taskId}`)
+    return response.data
+  } catch (error) {
+    console.error('Error fetching model interpreter result:', error)
     throw error
   }
 }

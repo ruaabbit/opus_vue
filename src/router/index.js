@@ -33,6 +33,11 @@ const router = createRouter({
       path: '/dynamics-analysis',
       name: 'dynamics-analysis',
       component: () => import('../views/DynamicsAnalysisView.vue')
+    },
+    {
+      path: '/model-interpreter',
+      name: 'model-interpreter',
+      component: () => import('../views/ModelInterpreterView.vue')
     }
   ]
 })

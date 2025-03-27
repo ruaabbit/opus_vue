@@ -1,47 +1,53 @@
 <template>
   <div class="container-layout">
+    <!-- 移除或注释掉外层的sidebar，因为目前没有使用 -->
+    <!-- <div class="sidebar">
+        <!- <ImageSelector /> ->
+      </div> -->
+
     <div class="main-content">
+      <!-- 移除或注释掉内层的sidebar，因为目前没有使用 -->
+      <!-- <div class="sidebar">
+          <!- <ImageSelector /> ->
+        </div> -->
+
       <el-card class="box-card">
         <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
           <el-form-item label="数据范围">
             <el-date-picker
-              v-model="formData.dataRange"
-              type="monthrange"
-              range-separator="至"
-              start-placeholder="开始月份"
-              end-placeholder="结束月份"
-              format="YYYY-MM"
-              value-format="YYYYMM"
+              v-model="formData.dataRange[0]"
+              type="date"
+              placeholder="选择开始日期"
+              format="YYYY-MM-DD"
+              value-format="YYYYMMDD"
             />
-          </el-form-item>
-
-          <el-form-item label="预报提前期">
-            <el-input-number
-              v-model="formData.grad_forecast_month"
-              :min="1"
-              placeholder="请输入提前期（月）"
-            />
-          </el-form-item>
-
-          <el-form-item label="目标月份">
+            <span style="margin: 0 8px">至</span>
             <el-date-picker
-              v-model="formData.grad_month"
-              type="month"
-              placeholder="目标月份由数据范围和预报提前期决定"
-              format="MM"
-              value-format="MM"
+              v-model="formData.dataRange[1]"
+              type="date"
+              placeholder="结束日期 (自动设置为开始日期+13天)"
+              format="YYYY-MM-DD"
+              value-format="YYYYMMDD"
               disabled
             />
           </el-form-item>
 
+          <el-form-item label="目标日期">
+            <el-input v-model="formData.grad_day" placeholder="请输入目标日期" />
+          </el-form-item>
+
           <el-form-item label="分析范围">
-            <ImageSelector v-model:topLeft="topLeftCoord" v-model:bottomRight="bottomRightCoord" />
+            <el-input
+              v-model="formData.grad_lat_lon"
+              disabled
+              placeholder="请输入经纬度范围（目前只支持全范围）"
+            />
           </el-form-item>
 
           <el-form-item label="分析目标">
             <el-radio-group v-model="formData.grad_type">
               <el-radio value="sum">海冰面积</el-radio>
-              <el-radio value="variation">海冰变化</el-radio>
+              <el-radio value="l2">L2范数</el-radio>
             </el-radio-group>
           </el-form-item>
 
@@ -58,7 +64,7 @@
 
         <div v-if="!isLoading && isOK" class="result-section">
           <!-- 使用新的DynamicsAnalysisViewer组件替换ArcticSeaIceViewer -->
-          <DynamicsAnalysisViewer :images="images" class="full-width" />
+          <ModelInterpreterViewer :images="images" class="full-width" />
         </div>
       </el-card>
     </div>
@@ -68,21 +74,16 @@
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useDynamicsAnalysis, getDynamicsAnalysisResult } from '@/common/api'
-import DynamicsAnalysisViewer from '@/components/DynamicsAnalysisViewer.vue'
+import { useModelInterpreter, getModelInterpreter } from '@/common/api'
+import ModelInterpreterViewer from '@/components/ModelInterpreterViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
-import ImageSelector from '@/components/ImageSelector.vue'
+// import ImageSelector from '@/components/ImageSelector.vue'
 
 const formData = ref({
   dataRange: [],
-  grad_forecast_month: 1,
-  grad_month: '',
+  grad_day: '',
   grad_lat_lon: '',
-  grad_type: 'sum',
-  x1: null,
-  y1: null,
-  x2: null,
-  y2: null
+  grad_type: 'sum'
 })
 
 const images = ref([])
@@ -90,34 +91,30 @@ const isOK = ref(false)
 const isLoading = ref(false)
 const currentTaskId = ref(null)
 
-const topLeftCoord = ref({ x: null, y: null })
-const bottomRightCoord = ref({ x: null, y: null })
-
-// 监听坐标变化并更新formData中的属性
+// 添加新的 watch，确保结束日期始终为开始日期+13天
 watch(
-  [topLeftCoord, bottomRightCoord],
-  ([newTopLeft, newBottomRight]) => {
-    formData.value.x1 = newTopLeft.y
-    formData.value.y1 = newTopLeft.x
-    formData.value.x2 = newBottomRight.y
-    formData.value.y2 = newBottomRight.x
-  },
-  { immediate: true, deep: true }
-)
-
-// 原有的watch保持不变
-watch(
-  [() => formData.value.dataRange, () => formData.value.grad_forecast_month],
-  ([newDataRange, newForecastMonth]) => {
-    if (newDataRange && newDataRange[1] && newForecastMonth) {
-      const endDate = new Date(
-        newDataRange[1].substring(0, 4),
-        parseInt(newDataRange[1].substring(4)) - 1
+  () => formData.value.dataRange[0],
+  (startDate) => {
+    if (startDate) {
+      // 将开始日期字符串转换为 Date 对象
+      const start = new Date(
+        startDate.substring(0, 4),
+        parseInt(startDate.substring(4, 6)) - 1,
+        parseInt(startDate.substring(6, 8))
       )
-      endDate.setMonth(endDate.getMonth() + newForecastMonth)
-      formData.value.grad_month = String(endDate.getMonth() + 1).padStart(2, '0')
-    } else {
-      formData.value.grad_month = ''
+
+      // 计算结束日期（开始日期 + 13天）
+      const end = new Date(start)
+      end.setDate(start.getDate() + 13)
+
+      // 格式化结束日期为 YYYYMMDD 格式
+      const endFormatted =
+        end.getFullYear() +
+        String(end.getMonth() + 1).padStart(2, '0') +
+        String(end.getDate()).padStart(2, '0')
+
+      // 更新 dataRange 数组
+      formData.value.dataRange = [startDate, endFormatted]
     }
   }
 )
@@ -126,7 +123,7 @@ const pollAnalysisResult = async () => {
   if (!currentTaskId.value) return
 
   try {
-    const result = await getDynamicsAnalysisResult(currentTaskId.value)
+    const result = await getModelInterpreter(currentTaskId.value)
 
     if (result.length !== 0) {
       images.value = result
@@ -152,8 +149,7 @@ const submitForm = async () => {
     !formData.value.dataRange ||
     !formData.value.dataRange[0] ||
     !formData.value.dataRange[1] ||
-    !formData.value.grad_month ||
-    !formData.value.grad_forecast_month
+    !formData.value.grad_day
   ) {
     ElMessage.error('请填写完整的分析参数')
     return
@@ -163,15 +159,11 @@ const submitForm = async () => {
     isLoading.value = true
     isOK.value = false
 
-    const res = await useDynamicsAnalysis(
+    const res = await useModelInterpreter(
       formData.value.dataRange[0],
       formData.value.dataRange[1],
       formData.value.grad_type,
-      formData.value.grad_month,
-      formData.value.x1,
-      formData.value.y1,
-      formData.value.x2,
-      formData.value.y2
+      formData.value.grad_day
     )
 
     currentTaskId.value = res.task_id
@@ -267,9 +259,9 @@ onUnmounted(() => {
 
   /* 以下两个样式可以移除，因为我们已经隐藏了sidebar */
   /*
-  .sidebar {
-    width: 0;
-  }
-  */
+    .sidebar {
+      width: 0;
+    }
+    */
 }
 </style>
