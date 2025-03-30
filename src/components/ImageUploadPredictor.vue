@@ -16,15 +16,15 @@
         <div class="upload-progress">
           <div class="progress-text">
             <span>已上传: </span>
-            <span :class="{ complete: fileList.length === props.imageLimit }">
-              {{ fileList.length }}/{{ props.imageLimit }}
+            <span :class="{ complete: uploadedCount === props.imageLimit }">
+              {{ uploadedCount }}/{{ props.imageLimit }}
             </span>
           </div>
           <el-progress
-            :percentage="(fileList.length / props.imageLimit) * 100"
+            :percentage="(uploadedCount / props.imageLimit) * 100"
             :stroke-width="8"
             :show-text="false"
-            :status="fileList.length === props.imageLimit ? 'success' : ''"
+            :status="uploadedCount === props.imageLimit ? 'success' : ''"
           />
         </div>
         <p class="hint-text">请上传{{ props.imageLimit }}张PNG格式图片</p>
@@ -101,11 +101,7 @@
           size="large"
           @click="submitPrediction"
           :loading="isLoading"
-          :disabled="
-            fileList.length !== props.imageLimit ||
-            !selectedDate ||
-            uploadedPaths.length !== props.imageLimit
-          "
+          :disabled="uploadedCount !== props.imageLimit || !selectedDate"
           class="submit-button"
         >
           <el-icon v-if="!isLoading">
@@ -143,7 +139,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { Plus, ZoomIn, Delete, Check, ArrowLeft, DataAnalysis } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
@@ -279,7 +275,15 @@ const validateBeforeUpload = (file) => {
 const handleUploadSuccess = (response, uploadFile) => {
   const imagePath = response.image_url
   if (imagePath) {
-    uploadedPaths.value.push(imagePath)
+    // 找到文件在fileList中的索引
+    const index = fileList.value.findIndex((file) => file.uid === uploadFile.uid)
+    if (index !== -1) {
+      // 确保uploadedPaths的长度与imageLimit一致
+      while (uploadedPaths.value.length < props.imageLimit) {
+        uploadedPaths.value.push(null)
+      }
+      uploadedPaths.value[index] = imagePath
+    }
   }
   ElMessage.success(`${uploadFile.name} 上传成功`)
 }
@@ -301,10 +305,14 @@ const showPreview = async (file) => {
 
 // 移除文件
 const handleRemove = (uploadFile) => {
-  fileList.value = fileList.value.filter((file) => file.uid !== uploadFile.uid)
   const index = fileList.value.findIndex((file) => file.uid === uploadFile.uid)
   if (index !== -1) {
+    fileList.value = fileList.value.filter((_, i) => i !== index)
     uploadedPaths.value.splice(index, 1)
+    // 补充null以保持数组长度
+    while (uploadedPaths.value.length < props.imageLimit) {
+      uploadedPaths.value.push(null)
+    }
   }
   ElMessage.warning(`还需上传${props.imageLimit - fileList.value.length}张图片`)
 }
@@ -351,14 +359,28 @@ const submitPrediction = async () => {
 const handleBack = () => {
   showResults.value = false
   images.value = []
-  fileList.value = []
-  uploadedPaths.value = []
+  initUploadState() // 添加这一行
   taskId.value = null
   if (pollingInterval.value) {
     clearInterval(pollingInterval.value)
   }
   emit('update:selectedDate', null)
 }
+
+// 添加新的计算属性
+const uploadedCount = computed(() => {
+  return uploadedPaths.value.filter((path) => path !== null && path !== undefined).length
+})
+
+// 添加初始化方法
+const initUploadState = () => {
+  uploadedPaths.value = new Array(props.imageLimit).fill(null)
+  fileList.value = []
+}
+
+onMounted(() => {
+  initUploadState()
+})
 </script>
 
 <style scoped>
