@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
 const request = axios.create({
     // baseURL: import.meta.env.VITE_APP_BASE_API,
@@ -24,38 +25,53 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
     (response) => {
-        //成功回调
-        //简化数据
-        return response.data
-        //未简化
-        // return Promise.resolve(response.data)
+        // 服务器通常会返回标准格式: {success, message, data, status}
+        const responseData = response.data
+
+        // // 根据接口文档，处理任务状态
+        // if (!responseData.success && responseData.status === 'IN_PROGRESS') {
+        //     // 任务仍在进行中，不显示错误消息，交由调用方处理
+        //     return responseData
+        // }
+
+        // // 如果请求成功但是任务失败，显示错误消息
+        // if (!responseData.success && responseData.status === 'FAILED') {
+        //     ElMessage.error(responseData.message || '任务执行失败')
+        // }
+
+        // 返回标准格式响应
+        return responseData
     },
     (error) => {
-        //失败回调:处理http网络错误的
-        //定义一个变量:存储网络错误信息
+        //失败回调:处理http网络错误
         let message = ''
-        //http状态码
-        const status = error.response.status
+        const status = error.response?.status
+
         switch (status) {
-            case 401:
-                message = 'TOKEN过期'
-                break
-            case 403:
-                message = '无权访问'
-                break
             case 404:
-                message = '请求地址错误'
+                message = '请求路径不存在'
                 break
             case 500:
-                message = '服务器出现问题'
+                message = '服务器内部错误'
                 break
             default:
-                message = '网络出现问题'
+                message = '网络连接异常'
                 break
         }
-        //可在此处引入UI进行错误提示
-        console.log("报错", message)
-        return Promise.reject(error)
+
+        // 显示错误消息
+        ElMessage.error(message)
+
+        // 构造一个与成功响应格式一致的错误对象
+        const errorResponse = {
+            success: false,
+            message: message,
+            status: 'FAILED',
+            data: null,
+            originalError: error
+        }
+
+        return Promise.reject(errorResponse)
     },
 )
 

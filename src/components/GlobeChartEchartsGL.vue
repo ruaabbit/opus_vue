@@ -84,14 +84,7 @@ const props = defineProps({
     type: String,
     default: 'picture/globe-texture/world.topo.bathy.200401.jpg'
   },
-  heightTexture: {
-    type: String,
-    default: 'picture/globe-texture/bathymetry_bw_composite_4k.jpg'
-  },
-  environment: {
-    type: String,
-    default: 'picture/globe-texture/starfield.jpg'
-  },
+
   lightIntensity: {
     type: Number,
     default: 3
@@ -131,19 +124,13 @@ const props = defineProps({
   maxDistance: {
     type: Number,
     default: 300
-  },
-  series: {
-    type: Array,
-    default: () => []
   }
 })
 
 const option = ref({
   globe: {
     baseTexture: props.baseTexture,
-    heightTexture: props.heightTexture,
     shading: 'color', // Realistic shading for the 3D effect
-    environment: props.environment,
     realisticMaterial: {
       roughness: 0.9
     },
@@ -164,8 +151,7 @@ const option = ref({
       minDistance: props.minDistance,
       maxDistance: props.maxDistance
     }
-  },
-  series: props.series
+  }
 })
 </script>
 

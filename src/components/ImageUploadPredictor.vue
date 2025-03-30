@@ -322,12 +322,16 @@ const pollPredictionResult = async () => {
   if (!taskId.value) return
 
   try {
-    const result = await props.getPredictionResult(taskId.value)
-    if (result.length != 0) {
-      images.value = result
+    const response = await props.getPredictionResult(taskId.value)
+    
+    if (response.success && response.data && response.data.images) {
+      images.value = response.data.images
       showResults.value = true
       clearInterval(pollingInterval.value)
       isLoading.value = false
+      ElMessage.success(response.message || '获取预测结果成功')
+    } else if (response.success === false) {
+      console.log('Task not completed yet:', response.message)
     }
   } catch (error) {
     if (error.response && error.response.status === 400) {
@@ -346,8 +350,26 @@ const submitPrediction = async () => {
   try {
     isLoading.value = true
     const response = await props.submitPredictionRequest(props.selectedDate, uploadedPaths.value)
-    taskId.value = response.task_id
-    pollingInterval.value = setInterval(pollPredictionResult, 2000)
+    
+    if (response.success && response.data && response.data.task_id) {
+      taskId.value = response.data.task_id
+      let attempts = 0;
+      const maxAttempts = 30; // 设置最大尝试次数，约为 1 分钟 (30 * 2秒)
+      
+      pollingInterval.value = setInterval(() => {
+        attempts++;
+        if (attempts > maxAttempts) {
+          clearInterval(pollingInterval.value)
+          isLoading.value = false
+          ElMessage.warning('请求超时，请稍后查看结果')
+          return
+        }
+        pollPredictionResult()
+      }, 2000)
+    } else {
+      isLoading.value = false
+      ElMessage.error(response.message || '提交预测请求失败')
+    }
   } catch (error) {
     isLoading.value = false
     ElMessage.error('提交预测请求失败')

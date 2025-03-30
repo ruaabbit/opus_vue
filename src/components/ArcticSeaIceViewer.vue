@@ -7,7 +7,7 @@
         <div class="loading-spinner"></div>
       </div>
       <img
-        :src="currentImage.path"
+        :src="getImageUrl(currentImage.path)"
         alt="Arctic Sea Ice Prediction"
         class="image"
         @click="viewImage(currentImage)"
@@ -59,7 +59,7 @@
       @click.self="selectedImage = null"
     >
       <div class="modal-content" :style="{ transform: `scale(${scale})` }">
-        <img :src="selectedImage.path" alt="Large view" class="modal-image" />
+        <img :src="getImageUrl(selectedImage.path)" alt="Large view" class="modal-image" />
         <p class="image-date">
           {{ selectedImage.date }}
         </p>
@@ -86,6 +86,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { getImageUrl } from '@/common/util'
 
 const props = defineProps({
   images: {
@@ -109,7 +110,7 @@ const preloadImage = (imagePath) => {
     const img = new Image()
     img.onload = () => resolve()
     img.onerror = reject
-    img.src = imagePath
+    img.src = getImageUrl(imagePath)
   })
 }
 
