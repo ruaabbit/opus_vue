@@ -12,8 +12,8 @@
         <el-form :model="formData" label-width="120px">
           <el-form-item label="预测类型">
             <el-radio-group v-model="formData.forecastType">
-              <el-radio label="daily">逐日预测</el-radio>
-              <el-radio label="monthly">逐月预测</el-radio>
+              <el-radio :value="'daily'">逐日预测</el-radio>
+              <el-radio :value="'monthly'">逐月预测</el-radio>
             </el-radio-group>
           </el-form-item>
 
@@ -57,7 +57,7 @@
       <div v-if="showResults && !isLoading" class="results-section">
         <!-- 不确定性可视化部分 -->
         <div class="visualization-tabs">
-          <el-tabs v-model="activeTab">
+          <el-tabs v-model="activeTab" @tab-change="handleTabChange">
             <el-tab-pane label="空间不确定性分布" name="spatial">
               <div class="globe-container">
                 <GlobeChartEchartsGL
@@ -78,13 +78,13 @@
               </div>
             </el-tab-pane>
             <el-tab-pane label="时间序列不确定性" name="temporal">
-              <div class="chart-container">
-                <v-chart class="time-series-chart" :option="timeSeriesOption" />
+              <div class="chart-container" :class="{ active: activeTab === 'temporal' }">
+                <v-chart class="time-series-chart" :option="timeSeriesOption" autoresize />
               </div>
             </el-tab-pane>
             <el-tab-pane label="概率分布" name="distribution">
-              <div class="chart-container">
-                <v-chart class="distribution-chart" :option="distributionOption" />
+              <div class="chart-container" :class="{ active: activeTab === 'distribution' }">
+                <v-chart class="distribution-chart" :option="distributionOption" autoresize />
               </div>
             </el-tab-pane>
           </el-tabs>
@@ -130,11 +130,31 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import GlobeChartEchartsGL from '../components/GlobeChartEchartsGL.vue'
 import LoadingAnimation from '../components/LoadingAnimation.vue'
 import VChart from 'vue-echarts'
+import * as echarts from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart, BarChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent
+} from 'echarts/components'
+
+// 注册必要的组件
+echarts.use([
+  CanvasRenderer,
+  LineChart,
+  BarChart,
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent
+])
 
 // 基本状态
 const formData = reactive({
@@ -182,7 +202,7 @@ const uncertaintyFactors = reactive([
 ])
 
 // 时间序列图配置
-const timeSeriesOption = {
+const timeSeriesOption = reactive({
   title: {
     text: '海冰面积预测的时间序列不确定性',
     left: 'center'
@@ -281,10 +301,10 @@ const timeSeriesOption = {
       symbol: 'none'
     }
   ]
-}
+})
 
 // 概率分布图配置
-const distributionOption = {
+const distributionOption = reactive({
   title: {
     text: '海冰面积预测的概率分布',
     left: 'center'
@@ -322,16 +342,40 @@ const distributionOption = {
       data: [5, 12, 25, 35, 18, 5],
       barWidth: '50%',
       itemStyle: {
-        color: new Function(
-          'params',
-          `
-          const colors = ['#F56C6C', '#E6A23C', '#67C23A', '#409EFF', '#E6A23C', '#F56C6C'];
-          return colors[params.dataIndex];
-        `
-        )
+        color: function (params) {
+          const colors = ['#F56C6C', '#E6A23C', '#67C23A', '#409EFF', '#E6A23C', '#F56C6C']
+          return colors[params.dataIndex]
+        }
       }
     }
   ]
+})
+
+// 图表更新的处理
+const updateCharts = () => {
+  // 不再需要遍历chartInstances中的实例
+  // vue-echarts会自动处理图表的更新
+  nextTick(() => {
+    // 如果正在显示分布图或时间序列图，确保重新渲染
+    if (activeTab.value === 'temporal' || activeTab.value === 'distribution') {
+      const chartContainers = document.querySelectorAll('.chart-container')
+      chartContainers.forEach((container) => {
+        if (container.classList.contains('active')) {
+          // 触发容器大小变化，确保图表正确渲染
+          container.style.height = `${container.offsetHeight}px`
+        }
+      })
+    }
+  })
+}
+
+// 监听标签页切换
+const handleTabChange = (tab) => {
+  activeTab.value = tab
+  // 切换标签页后，只需更新图表，不需要重新初始化
+  nextTick(() => {
+    updateCharts()
+  })
 }
 
 // 生成分析结果
@@ -354,16 +398,58 @@ const generateAnalysis = () => {
       timeSeriesOption.series[0].data = [8.2, 7.5, 6.8, 6.2, 5.8, 5.5]
       timeSeriesOption.series[1].data = [8.8, 8.2, 7.6, 7.2, 6.9, 6.7]
       timeSeriesOption.series[2].data = [7.6, 6.8, 6.0, 5.2, 4.7, 4.3]
+
+      // 同时更新这两个系列，它们用于阴影区域
+      timeSeriesOption.series[3].data = [8.8, 8.2, 7.6, 7.2, 6.9, 6.7]
+      timeSeriesOption.series[4].data = [-1.2, -1.4, -1.6, -2.0, -2.2, -2.4].map((v) => 8.8 + v)
+
+      // 更新分布图数据
+      distributionOption.xAxis.data = ['4.0-5.0', '5.0-6.0', '6.0-7.0', '7.0-8.0', '8.0-9.0']
+      distributionOption.series[0].data = [8, 20, 40, 25, 7]
     } else {
       timeSeriesOption.xAxis.data = ['1日', '2日', '3日', '4日', '5日', '6日', '7日']
       timeSeriesOption.series[0].data = [10.2, 10.0, 9.8, 9.5, 9.2, 8.8, 8.5]
       timeSeriesOption.series[1].data = [10.5, 10.4, 10.3, 10.1, 9.9, 9.7, 9.5]
       timeSeriesOption.series[2].data = [9.9, 9.6, 9.3, 8.9, 8.5, 7.9, 7.5]
+
+      // 同时更新这两个系列，它们用于阴影区域
+      timeSeriesOption.series[3].data = [10.5, 10.4, 10.3, 10.1, 9.9, 9.7, 9.5]
+      timeSeriesOption.series[4].data = [-0.6, -0.8, -1.0, -1.2, -1.4, -1.8, -2.0].map(
+        (v) => 10.5 + v
+      )
+
+      // 重置分布图数据为默认值
+      distributionOption.xAxis.data = [
+        '7.5-8.0',
+        '8.0-8.5',
+        '8.5-9.0',
+        '9.0-9.5',
+        '9.5-10.0',
+        '10.0-10.5'
+      ]
+      distributionOption.series[0].data = [5, 12, 25, 35, 18, 5]
     }
 
     ElMessage.success('不确定性分析完成')
+
+    // 确保图表在结果显示后更新
+    nextTick(() => {
+      // 直接更新图表，不需要再初始化
+      updateCharts()
+    })
   }, 2000)
 }
+
+// 组件挂载和卸载时执行
+onMounted(() => {
+  // 在窗口大小变化时更新图表尺寸
+  window.addEventListener('resize', updateCharts, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateCharts)
+  // 不再需要手动销毁图表实例，vue-echarts会处理
+})
 </script>
 
 <style scoped>
@@ -469,16 +555,31 @@ const generateAnalysis = () => {
 
 .chart-container {
   height: 500px;
+  min-height: 400px;
+  width: 100%;
   background-color: #fff;
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  box-sizing: border-box;
+  visibility: hidden;
+}
+
+.chart-container.active {
+  visibility: visible;
 }
 
 .time-series-chart,
 .distribution-chart {
   width: 100%;
   height: 100%;
+  min-height: 350px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .analysis-details {

@@ -123,24 +123,32 @@ const pollAnalysisResult = async () => {
   if (!currentTaskId.value) return
 
   try {
-    const result = await getModelInterpreter(currentTaskId.value)
+    const response = await getModelInterpreter(currentTaskId.value)
 
-    if (result.length !== 0) {
-      images.value = result
-      isOK.value = true
-      ElMessage.success('分析完成')
-      isLoading.value = false
-      currentTaskId.value = null
+    // 根据API响应的标准格式处理结果
+    if (response.success && response.status === 'COMPLETED') {
+      // 任务完成，处理结果
+      if (response.data && response.data.images) {
+        images.value = response.data.images
+        isOK.value = true
+        ElMessage.success(response.message || '分析完成')
+        isLoading.value = false
+        currentTaskId.value = null
+      } else {
+        throw new Error('返回数据格式不正确')
+      }
+    } else if (response.status === 'IN_PROGRESS') {
+      // 任务仍在进行中，继续轮询
+      console.log('任务处理中，继续轮询...')
+    } else if (response.status === 'FAILED') {
+      // 任务失败
+      throw new Error(response.message || '任务处理失败')
     }
   } catch (error) {
-    if (error.response && error.response.status === 400) {
-      console.log('Task not completed yet, continuing polling...')
-      return
-    }
     console.error('轮询分析结果出错:', error)
     isLoading.value = false
     isOK.value = false
-    ElMessage.error('获取分析结果失败')
+    ElMessage.error(error.message || '获取分析结果失败')
   }
 }
 

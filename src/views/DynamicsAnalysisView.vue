@@ -128,22 +128,27 @@ const pollAnalysisResult = async () => {
   try {
     const result = await getDynamicsAnalysisResult(currentTaskId.value)
 
-    if (result.length !== 0) {
-      images.value = result
+    if (result.success && result.status === "COMPLETED") {
+      images.value = result.data.images
       isOK.value = true
-      ElMessage.success('分析完成')
+      ElMessage.success(result.message || '分析完成')
       isLoading.value = false
+      currentTaskId.value = null
+    } else if (result.status === "IN_PROGRESS") {
+      console.log('Task not completed yet, continuing polling...')
+    } else if (result.status === "FAILED") {
+      console.error('分析任务失败:', result.message)
+      isLoading.value = false
+      isOK.value = false
+      ElMessage.error(result.message || '分析任务失败')
       currentTaskId.value = null
     }
   } catch (error) {
-    if (error.response && error.response.status === 400) {
-      console.log('Task not completed yet, continuing polling...')
-      return
-    }
     console.error('轮询分析结果出错:', error)
     isLoading.value = false
     isOK.value = false
     ElMessage.error('获取分析结果失败')
+    currentTaskId.value = null
   }
 }
 
