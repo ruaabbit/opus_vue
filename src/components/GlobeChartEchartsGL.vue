@@ -5,72 +5,22 @@
       :option="option"
       autoresize
       :style="{ width: props.width, height: props.height }"
-    />
-    <div v-else class="loading-indicator">加载中，请稍后…</div>
+    ></v-chart>
+    <div v-else class="loading-indicator">加载中，请稍后...</div>
   </div>
 </template>
 
 <script setup>
-import { ref, provide, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, provide, onMounted, onBeforeUnmount, nextTick, watch, computed } from 'vue'
 import VChart, { THEME_KEY } from 'vue-echarts'
 
 const isEChartsReady = ref(false)
 const chartContainer = ref(null)
+const currentImageIndex = ref(0)
+const preloadedTextures = ref(new Map())
+// const isTextureLoading = ref(false)
 
-// Dynamic imports for ECharts components
-const initECharts = async () => {
-  try {
-    // 确保容器已经渲染完成
-    await nextTick()
-
-    // 检查容器尺寸
-    if (!chartContainer.value?.offsetWidth || !chartContainer.value?.offsetHeight) {
-      console.warn('Chart container has no dimensions, retrying...')
-      // 如果容器没有尺寸，等待100ms后重试
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
-
-    const { use } = await import('echarts/core')
-    const { CanvasRenderer } = await import('echarts/renderers')
-    const { GlobeComponent } = await import('echarts-gl/components')
-    const { Lines3DChart } = await import('echarts-gl/charts')
-
-    use([CanvasRenderer, GlobeComponent, Lines3DChart])
-
-    // 再次确认容器尺寸
-    if (chartContainer.value?.offsetWidth && chartContainer.value?.offsetHeight) {
-      isEChartsReady.value = true
-    } else {
-      throw new Error('Container dimensions not available')
-    }
-  } catch (error) {
-    console.error('Failed to initialize ECharts:', error)
-  }
-}
-
-// 处理窗口调整
-let resizeHandler = null
-const handleResize = () => {
-  if (window.echarts && chartContainer.value) {
-    const chart = window.echarts.getInstanceByDom(chartContainer.value)
-    chart?.resize()
-  }
-}
-
-provide(THEME_KEY, 'dark')
-
-onMounted(async () => {
-  await initECharts()
-  resizeHandler = handleResize
-  window.addEventListener('resize', resizeHandler)
-})
-
-onBeforeUnmount(() => {
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler)
-  }
-})
-
+// 新增props接收images数组
 const props = defineProps({
   width: {
     type: String,
@@ -84,10 +34,13 @@ const props = defineProps({
     type: String,
     default: 'picture/globe-texture/world.topo.bathy.200401.jpg'
   },
-
-  lightIntensity: {
+  images: {
+    type: Array,
+    default: () => []
+  },
+  currentIndex: {
     type: Number,
-    default: 3
+    default: 0
   },
   autoRotate: {
     type: Boolean,
@@ -124,19 +77,68 @@ const props = defineProps({
   maxDistance: {
     type: Number,
     default: 300
+  },
+  lightIntensity: {
+    type: Number,
+    default: 3
   }
 })
 
+// 发射事件
+// const emit = defineEmits(['update:currentIndex'])
+
+// 当前显示的纹理
+const currentTexture = computed(() => {
+  if (props.images && props.images.length > 0) {
+    const url = 'https://seaice.52lxy.one:20443' + props.images[props.currentIndex].path
+    return preloadedTextures.value.get(url) || url
+  } else {
+    return props.baseTexture
+  }
+})
+
+// 预加载图片的工具函数
+const preloadTexture = (url) => {
+  if (preloadedTextures.value.has(url)) {
+    return Promise.resolve(url)
+  }
+  
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      preloadedTextures.value.set(url, url)
+      resolve(url)
+    }
+    img.onerror = () => reject(url)
+    img.src = url
+  })
+}
+
+// 预加载所有纹理
+const preloadAllTextures = async () => {
+  if (!props.images || props.images.length === 0) return
+  
+  const preloadPromises = props.images.map(img => 
+    preloadTexture('https://seaice.52lxy.one:20443' + img.path)
+  )
+  
+  try {
+    await Promise.all(preloadPromises)
+  } catch (error) {
+    console.warn('Failed to preload some textures:', error)
+  }
+}
+
 const option = ref({
   globe: {
-    baseTexture: props.baseTexture,
-    shading: 'color', // Realistic shading for the 3D effect
+    baseTexture: currentTexture,
+    shading: 'color',
     realisticMaterial: {
       roughness: 0.9
     },
     light: {
       main: {
-        intensity: props.lightIntensity, // Light intensity for realism
+        intensity: props.lightIntensity,
         shadow: true
       }
     },
@@ -151,6 +153,86 @@ const option = ref({
       minDistance: props.minDistance,
       maxDistance: props.maxDistance
     }
+  }
+})
+
+// 监听currentTexture的变化并平滑更新echarts配置
+watch(currentTexture, (newTexture) => {
+  if (window.echarts && chartContainer.value) {
+    option.value.globe.baseTexture = newTexture
+    const chart = window.echarts.getInstanceByDom(chartContainer.value)
+    if (chart) {
+      // 平滑更新配置，保留当前视图状态
+      chart.setOption({
+        globe: {
+          baseTexture: newTexture
+        }
+      }, false, true)
+    }
+  }
+})
+
+// Dynamic imports for ECharts components
+const initECharts = async () => {
+  try {
+    // 确保容器已经渲染完成
+    await nextTick()
+
+    // 检查容器尺寸
+    if (!chartContainer.value?.offsetWidth || !chartContainer.value?.offsetHeight) {
+      console.warn('Chart container has no dimensions, retrying...')
+      // 如果容器没有尺寸，等待100ms后重试
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+
+    const { use } = await import('echarts/core')
+    const { CanvasRenderer } = await import('echarts/renderers')
+    const { GlobeComponent } = await import('echarts-gl/components')
+    const { Lines3DChart } = await import('echarts-gl/charts')
+
+    use([CanvasRenderer, GlobeComponent, Lines3DChart])
+
+    // 再次确认容器尺寸
+    if (chartContainer.value?.offsetWidth && chartContainer.value?.offsetHeight) {
+      isEChartsReady.value = true
+      
+      // 初始化完成后预加载所有图片
+      await preloadAllTextures()
+    } else {
+      throw new Error('Container dimensions not available')
+    }
+  } catch (error) {
+    console.error('Failed to initialize ECharts:', error)
+  }
+}
+
+// 监听currentIndex变化
+watch(() => props.currentIndex, (newIndex) => {
+  if (props.images && props.images.length > 0) {
+    currentImageIndex.value = newIndex
+  }
+})
+
+// 处理窗口调整
+let resizeHandler = null
+const handleResize = () => {
+  if (window.echarts && chartContainer.value) {
+    const chart = window.echarts.getInstanceByDom(chartContainer.value)
+    chart?.resize()
+  }
+}
+
+provide(THEME_KEY, 'dark')
+
+onMounted(async () => {
+  await initECharts()
+  resizeHandler = handleResize
+  window.addEventListener('resize', resizeHandler)
+})
+
+onBeforeUnmount(() => {
+  if (resizeHandler) {
+    window.removeEventListener('resize', resizeHandler)
   }
 })
 </script>
