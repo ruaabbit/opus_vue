@@ -56,7 +56,7 @@ export async function getMonthPredictionResult(taskId) {
 
 export async function useRealtimeMonthPrediction() {
   try {
-    const response = await request.get('/realtime-month-prediction')
+    const response = await request.get('/api/realtime/month')
     const data = response.data
     return data
   } catch (error) {
