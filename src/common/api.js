@@ -74,16 +74,15 @@ export async function useRealtimeMonthPrediction() {
 export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_month, x1, y1, x2, y2) {
   try {
     const response = await request.post('/api/dynamics/analysis', {
-      data: {
-        start_time: start_time,
-        end_time: end_time,
-        grad_type: grad_type,
-        grad_month: grad_month,
-        x1: x1,
-        y1: y1,
-        x2: x2,
-        y2: y2
-      }
+      start_time: start_time,
+      end_time: end_time,
+      grad_type: grad_type,
+      grad_month: grad_month,
+      x1: x1,
+      y1: y1,
+      x2: x2,
+      y2: y2
+
     })
     return response
   } catch (error) {
@@ -105,12 +104,10 @@ export async function getDynamicsAnalysisResult(taskId) {
 export async function useModelInterpreter(start_time, end_time, grad_type, grad_day) {
   try {
     const response = await request.post('/api/model/interpreter', {
-      data: {
-        start_time: start_time,
-        end_time: end_time,
-        grad_type: grad_type,
-        grad_day: grad_day
-      }
+      start_time: start_time,
+      end_time: end_time,
+      grad_type: grad_type,
+      grad_day: grad_day
     })
     return response
   } catch (error) {
