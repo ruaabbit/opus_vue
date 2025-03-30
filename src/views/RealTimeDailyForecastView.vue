@@ -1,7 +1,7 @@
 <template>
-  <div class="forecast-container">
-    <div class="forecast-content">
-      <div class="viewer-wrapper">
+  <div class="main-container">
+    <div class="content-wrapper">
+      <div class="viewer-container">
         <div v-if="isLoading">
           <!-- 显示加载动画 -->
           <LoadingAnimation />
@@ -35,12 +35,9 @@ const baseTexture = ref('')
 
 onMounted(() => {
   useRealtimeDayPrediction().then((data) => {
-    images.value = data.images
-
-    // 如果API返回的数据中包含海冰覆盖图像URL，可以设置为地球纹理
-    if (data.images && data.images.length > 0 && data.images[0].path) {
-      // 设置第一个图像为地球纹理，如果需要的话
-      baseTexture.value = 'https://seaice.52lxy.one:20443' + data.images[0].path
+    if (data.success) {
+      images.value = data.data.images
+      baseTexture.value = 'https://seaice.52lxy.one:20443' + data.data.images[0].path
     }
 
     isLoading.value = false
@@ -49,26 +46,25 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.forecast-container {
-  width: 100%;
-  max-height: 100vh;
+.main-container {
   margin: 0 auto;
   display: flex;
+  max-height: 100vh;
 }
 
-.forecast-content {
+.content-wrapper {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   width: 100%;
 }
 
-.viewer-wrapper {
+.viewer-container {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 80vh; /* 调整高度以适应地球 */
+  height: 80vh;
 }
 
 .globe-chart {

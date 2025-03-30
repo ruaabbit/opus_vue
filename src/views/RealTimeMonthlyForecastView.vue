@@ -35,12 +35,9 @@ const baseTexture = ref('')
 
 onMounted(() => {
   useRealtimeMonthPrediction().then((data) => {
-    images.value = data.images
-
-    // 如果API返回的数据中包含海冰覆盖图像URL，可以设置为地球纹理
-    if (data.images && data.images.length > 0 && data.images[0].path) {
-      // 设置第一个图像为地球纹理，如果需要的话
-      baseTexture.value = 'https://seaice.52lxy.one:20443' + data.images[0].path
+    if (data.success) {
+      images.value = data.data.images
+      baseTexture.value = 'https://seaice.52lxy.one:20443' + data.data.images[0].path
     }
 
     isLoading.value = false
@@ -67,7 +64,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 80vh; /* 调整高度以适应地球 */
+  height: 80vh;
 }
 
 .globe-chart {
