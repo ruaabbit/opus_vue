@@ -11,7 +11,7 @@
             class="globe-chart"
             :images="images"
             :current-index="currentIndex"
-            :auto-rotate="true"
+            :auto-rotate="false"
             :target-coord="[0, 90]"
             :alpha="60"
             :distance="200"
