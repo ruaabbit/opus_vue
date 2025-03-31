@@ -11,10 +11,8 @@
             class="globe-chart"
             :images="images"
             :current-index="currentIndex"
-            :auto-rotate="true"
+            :auto-rotate="false"
             :target-coord="[0, 90]"
-            :alpha="60"
-            :distance="200"
           />
           <div class="controls">
             <div class="date-display">{{ currentDate }}</div>
@@ -93,7 +91,7 @@ onMounted(async () => {
     const data = await useRealtimeDayPrediction()
     if (data.success && data.data.images) {
       images.value = data.data.images
-      
+
       // 开始自动播放
       if (images.value.length > 1) {
         startPlayback()

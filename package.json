@@ -30,6 +30,7 @@
     "unplugin-auto-import": "^19.1.2",
     "unplugin-vue-components": "^28.4.1",
     "vfonts": "^0.0.3",
-    "vite": "^6.2.3"
+    "vite": "^6.2.3",
+    "vite-plugin-vue-devtools": "^7.7.2"
   }
 }

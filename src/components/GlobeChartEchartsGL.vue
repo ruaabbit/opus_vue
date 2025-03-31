@@ -3,36 +3,27 @@
     <v-chart
       v-if="isEChartsReady"
       :option="option"
+      :update-options="updateOption"
+      :loading="isLoading"
+      :loading-options="loadingOptions"
       autoresize
-      :style="{ width: props.width, height: props.height }"
-    ></v-chart>
+    />
     <div v-else class="loading-indicator">加载中，请稍后...</div>
   </div>
 </template>
 
 <script setup>
-import { ref, provide, onMounted, onBeforeUnmount, nextTick, watch, computed } from 'vue'
+import { ref, provide, onMounted, nextTick, watch, computed } from 'vue'
 import VChart, { THEME_KEY } from 'vue-echarts'
 
 const isEChartsReady = ref(false)
 const chartContainer = ref(null)
-const currentImageIndex = ref(0)
-const preloadedTextures = ref(new Map())
-// const isTextureLoading = ref(false)
 
-// 新增props接收images数组
+// 定义props
 const props = defineProps({
-  width: {
-    type: String,
-    default: '100%'
-  },
-  height: {
-    type: String,
-    default: '100%'
-  },
   baseTexture: {
     type: String,
-    default: 'picture/globe-texture/world.topo.bathy.200401.jpg'
+    default: 'picture/sea_ice_map.png'
   },
   images: {
     type: Array,
@@ -84,54 +75,36 @@ const props = defineProps({
   }
 })
 
-// 发射事件
-// const emit = defineEmits(['update:currentIndex'])
-
 // 当前显示的纹理
 const currentTexture = computed(() => {
   if (props.images && props.images.length > 0) {
-    const url = 'https://seaice.52lxy.one:20443' + props.images[props.currentIndex].path
-    return preloadedTextures.value.get(url) || url
+    return 'https://seaice.52lxy.one:20443' + props.images[props.currentIndex].path
   } else {
-    return props.baseTexture
+    return null
   }
 })
 
-// 预加载图片的工具函数
-const preloadTexture = (url) => {
-  if (preloadedTextures.value.has(url)) {
-    return Promise.resolve(url)
-  }
-  
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => {
-      preloadedTextures.value.set(url, url)
-      resolve(url)
-    }
-    img.onerror = () => reject(url)
-    img.src = url
-  })
-}
+const isLoading = ref(true)
+const loadingOptions = {
+  text: '正在加载中...',
+  color: '#c23531',
+  textColor: '#000',
+  maskColor: 'rgba(255, 255, 255, 0.8)',
+  zlevel: 0,
 
-// 预加载所有纹理
-const preloadAllTextures = async () => {
-  if (!props.images || props.images.length === 0) return
-  
-  const preloadPromises = props.images.map(img => 
-    preloadTexture('https://seaice.52lxy.one:20443' + img.path)
-  )
-  
-  try {
-    await Promise.all(preloadPromises)
-  } catch (error) {
-    console.warn('Failed to preload some textures:', error)
-  }
+  fontSize: 12,
+  showSpinner: true,
+  spinnerRadius: 10,
+  lineWidth: 5,
+  fontWeight: 'normal',
+  fontStyle: 'normal',
+  fontFamily: 'sans-serif'
 }
 
 const option = ref({
+  animation: true,
   globe: {
-    baseTexture: currentTexture,
+    baseTexture: props.baseTexture,
     shading: 'color',
     realisticMaterial: {
       roughness: 0.9
@@ -152,38 +125,38 @@ const option = ref({
       maxAlpha: props.maxAlpha,
       minDistance: props.minDistance,
       maxDistance: props.maxDistance
-    }
+    },
+    layers: [
+      {
+        type: 'blend',
+        blendTo: 'emphasis',
+        texture: currentTexture,
+        animation: true,
+        regionHeight: 0.1,
+        regionWidth: 0.1,
+        regionColor: '#fff',
+        regionOpacity: 0.5
+      }
+    ]
   }
 })
 
-// 监听currentTexture的变化并平滑更新echarts配置
+const updateOption = {
+  // notMerge: true,
+  // replaceMerge: ['globe'],
+  // lazyUpdate: true
+}
+
 watch(currentTexture, (newTexture) => {
   if (window.echarts && chartContainer.value) {
-    option.value.globe.baseTexture = newTexture
-    const chart = window.echarts.getInstanceByDom(chartContainer.value)
-    if (chart) {
-      // 平滑更新配置，保留当前视图状态
-      chart.setOption({
-        globe: {
-          baseTexture: newTexture
-        }
-      }, false, true)
-    }
+    option.value.globe.layers[0].texture = newTexture
   }
 })
 
-// Dynamic imports for ECharts components
+// 初始化ECharts
 const initECharts = async () => {
   try {
-    // 确保容器已经渲染完成
     await nextTick()
-
-    // 检查容器尺寸
-    if (!chartContainer.value?.offsetWidth || !chartContainer.value?.offsetHeight) {
-      console.warn('Chart container has no dimensions, retrying...')
-      // 如果容器没有尺寸，等待100ms后重试
-      await new Promise((resolve) => setTimeout(resolve, 100))
-    }
 
     const { use } = await import('echarts/core')
     const { CanvasRenderer } = await import('echarts/renderers')
@@ -192,33 +165,47 @@ const initECharts = async () => {
 
     use([CanvasRenderer, GlobeComponent, Lines3DChart])
 
-    // 再次确认容器尺寸
+    // 确认容器尺寸
     if (chartContainer.value?.offsetWidth && chartContainer.value?.offsetHeight) {
       isEChartsReady.value = true
-      
-      // 初始化完成后预加载所有图片
-      await preloadAllTextures()
+
+      // 预加载所有图片
+      await preloadAllImages()
+      isLoading.value = false
     } else {
       throw new Error('Container dimensions not available')
     }
   } catch (error) {
     console.error('Failed to initialize ECharts:', error)
+    isLoading.value = false
   }
 }
 
-// 监听currentIndex变化
-watch(() => props.currentIndex, (newIndex) => {
-  if (props.images && props.images.length > 0) {
-    currentImageIndex.value = newIndex
+// 预加载所有图片函数
+const preloadAllImages = async () => {
+  if (!props.images || props.images.length === 0) {
+    return
   }
-})
 
-// 处理窗口调整
-let resizeHandler = null
-const handleResize = () => {
-  if (window.echarts && chartContainer.value) {
-    const chart = window.echarts.getInstanceByDom(chartContainer.value)
-    chart?.resize()
+  const imageLoadPromises = props.images.map((image) => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      const imageUrl = 'https://seaice.52lxy.one:20443' + image.path
+
+      img.onload = () => resolve(imageUrl)
+      img.onerror = () => {
+        console.warn(`Failed to preload image: ${imageUrl}`)
+        resolve(null) // 即使加载失败也继续，不阻止整体流程
+      }
+      img.src = imageUrl
+    })
+  })
+
+  try {
+    await Promise.all(imageLoadPromises)
+    console.log(`Successfully preloaded ${props.images.length} images`)
+  } catch (error) {
+    console.error('Error during image preloading:', error)
   }
 }
 
@@ -226,14 +213,6 @@ provide(THEME_KEY, 'dark')
 
 onMounted(async () => {
   await initECharts()
-  resizeHandler = handleResize
-  window.addEventListener('resize', resizeHandler)
-})
-
-onBeforeUnmount(() => {
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler)
-  }
 })
 </script>
 
