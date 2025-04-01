@@ -12,7 +12,6 @@
             :images="images"
             :current-index="currentIndex"
             :auto-rotate="false"
-           
           />
           <div class="controls">
             <div class="date-display">{{ currentDate }}</div>
