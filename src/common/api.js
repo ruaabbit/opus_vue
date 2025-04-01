@@ -73,21 +73,27 @@ export async function useRealtimeMonthPrediction() {
 
 export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_month, x1, y1, x2, y2) {
   try {
-    const response = await request.post('/api/dynamics/analysis', {
+    // 创建基本请求参数
+    const params = {
       start_time: start_time,
       end_time: end_time,
       grad_type: grad_type,
-      grad_month: grad_month,
-      x1: x1,
-      y1: y1,
-      x2: x2,
-      y2: y2
+      grad_month: grad_month
+    };
 
-    })
-    return response
+    // 只有当所有坐标值都不为空时才添加到请求参数中
+    if (x1 != null && y1 != null && x2 != null && y2 != null) {
+      params.x1 = x1;
+      params.y1 = y1;
+      params.x2 = x2;
+      params.y2 = y2;
+    }
+
+    const response = await request.post('/api/dynamics/analysis', params);
+    return response;
   } catch (error) {
-    console.error('Error fetching dynamics analysis:', error)
-    throw error
+    console.error('Error fetching dynamics analysis:', error);
+    throw error;
   }
 }
 

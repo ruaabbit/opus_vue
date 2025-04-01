@@ -8,7 +8,7 @@
       @mouseup="endSelection"
       @mouseleave="endSelection"
     >
-      <img src="/src/assets/placeholder.svg" alt="Selectable Image" draggable="false" />
+      <img src="/picture/land_image.png" alt="Selectable Image" draggable="false" />
       <div
         v-if="isSelecting"
         class="selection"
@@ -160,7 +160,7 @@ const clearSelection = () => {
   lastSelection.width = 0
   lastSelection.height = 0
   lastSelection.isVisible = false
-  
+
   // 重置selectionRect，防止下次选择时出现异常行为
   selectionRect.left = 0
   selectionRect.top = 0

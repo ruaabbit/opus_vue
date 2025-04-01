@@ -173,8 +173,13 @@ const submitForm = async () => {
       formData.value.grad_type,
       formData.value.grad_day
     )
-
-    currentTaskId.value = res.task_id
+    if (!res.success) {
+      isLoading.value = false
+      ElMessage.error(res.message || '提交分析请求失败')
+      return
+    } else {
+      currentTaskId.value = res.data.task_id
+    }
 
     const pollingInterval = setInterval(async () => {
       await pollAnalysisResult()

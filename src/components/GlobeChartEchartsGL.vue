@@ -23,7 +23,7 @@ const chartContainer = ref(null)
 const props = defineProps({
   baseTexture: {
     type: String,
-    default: 'picture/sea_ice_map.png'
+    default: '/seaice/picture/sea_ice_map.png'
   },
   images: {
     type: Array,
@@ -55,7 +55,7 @@ const props = defineProps({
   },
   minAlpha: {
     type: Number,
-    default: 90
+    default: 0
   },
   maxAlpha: {
     type: Number,
@@ -149,7 +149,17 @@ const updateOption = {
 
 watch(currentTexture, (newTexture) => {
   if (window.echarts && chartContainer.value) {
-    option.value.globe.layers[0].texture = newTexture
+    if (isEChartsReady.value) {
+      chartContainer.value.getEchartsInstance().setOption({
+        globe: {
+          layers: [
+            {
+              texture: newTexture
+            }
+          ]
+        }
+      })
+    }
   }
 })
 

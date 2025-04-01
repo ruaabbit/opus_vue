@@ -12,7 +12,7 @@
             :images="images"
             :current-index="currentIndex"
             :auto-rotate="false"
-            :target-coord="[0, 90]"
+           
           />
           <div class="controls">
             <div class="date-display">{{ currentDate }}</div>

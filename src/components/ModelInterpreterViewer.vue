@@ -7,10 +7,10 @@
     <div v-if="props.images && props.images.length > 0" class="single-image-container">
       <div class="image-container">
         <img
-          :src="props.images[0]"
+          :src="getImageUrl(props.images[0])"
           alt="可解释性分析结果"
           class="analysis-image"
-          @click="viewImage(props.images[0])"
+          @click="viewImage(getImageUrl(props.images[0]))"
         />
       </div>
     </div>
@@ -28,7 +28,7 @@
       @click.self="selectedImage = null"
     >
       <div class="modal-content" :style="{ transform: `scale(${scale})` }">
-        <img :src="selectedImage" alt="放大查看" class="modal-image" />
+        <img :src="getImageUrl(selectedImage)" alt="放大查看" class="modal-image" />
       </div>
       <button @click="selectedImage = null" class="close-button">
         <svg
@@ -53,6 +53,8 @@
 <script setup>
 import { ref } from 'vue'
 import { ElEmpty } from 'element-plus'
+
+import { getImageUrl } from '@/common/util'
 
 const props = defineProps({ images: { type: Array, required: true } })
 

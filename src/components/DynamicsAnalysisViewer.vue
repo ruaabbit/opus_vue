@@ -11,7 +11,7 @@
             <div class="loading-spinner"></div>
           </div>
           <img
-            :src="image.path"
+            :src="getImageUrl(image.path)"
             :alt="`${image.date} - 动力学分析结果`"
             class="analysis-image"
             @click="viewImage(image)"
@@ -35,7 +35,7 @@
       @click.self="selectedImage = null"
     >
       <div class="modal-content" :style="{ transform: `scale(${scale})` }">
-        <img :src="selectedImage.path" alt="放大查看" class="modal-image" />
+        <img :src="getImageUrl(selectedImage.path)" alt="放大查看" class="modal-image" />
         <p class="image-date">
           {{ selectedImage.date }}
         </p>
@@ -64,6 +64,8 @@
 import { ref, onMounted, watch, computed } from 'vue'
 import { ElEmpty } from 'element-plus'
 
+import { getImageUrl } from '@/common/util'
+
 const props = defineProps({ images: { type: Array, required: true } })
 
 const selectedImage = ref(null)
@@ -91,7 +93,7 @@ const preloadAllImages = () => {
   if (!props.images || props.images.length === 0) return
 
   props.images.forEach((image, index) => {
-    preloadImage(image.path)
+    preloadImage(getImageUrl(image.path))
       .then(() => {
         loadingImages.value[index] = false
       })
