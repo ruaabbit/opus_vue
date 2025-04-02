@@ -1,16 +1,6 @@
 <template>
   <div class="container-layout">
-    <!-- 移除或注释掉外层的sidebar，因为目前没有使用 -->
-    <!-- <div class="sidebar">
-        <!- <ImageSelector /> ->
-      </div> -->
-
     <div class="main-content">
-      <!-- 移除或注释掉内层的sidebar，因为目前没有使用 -->
-      <!-- <div class="sidebar">
-          <!- <ImageSelector /> ->
-        </div> -->
-
       <el-card class="box-card">
         <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
           <el-form-item label="数据范围">

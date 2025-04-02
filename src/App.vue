@@ -44,7 +44,7 @@
 
             <el-menu-item index="/model-interpreter">
               <el-icon><Lightning /></el-icon>
-              <template #title>逐日动力学分析</template>
+              <template #title>逐日模型可解释性分析</template>
             </el-menu-item>
 
             <el-menu-item index="/dynamics-analysis">
