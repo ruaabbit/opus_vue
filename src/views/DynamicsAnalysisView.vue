@@ -3,13 +3,20 @@
     <div class="main-content">
       <el-card class="box-card">
         <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
-          <el-form-item label="数据范围">
+          <el-form-item label="开始月份">
             <el-date-picker
-              v-model="formData.dataRange"
-              type="monthrange"
-              range-separator="至"
-              start-placeholder="开始月份"
-              end-placeholder="结束月份"
+              v-model="formData.startMonth"
+              type="month"
+              placeholder="选择开始月份"
+              format="YYYY-MM"
+              value-format="YYYYMM"
+            />
+          </el-form-item>
+          <el-form-item label="结束月份">
+            <el-date-picker
+              v-model="formData.endMonth"
+              type="month"
+              placeholder="选择结束月份"
               format="YYYY-MM"
               value-format="YYYYMM"
             />
@@ -74,7 +81,8 @@ import LoadingAnimation from '@/components/LoadingAnimation.vue'
 import ImageSelector from '@/components/ImageSelector.vue'
 
 const formData = ref({
-  dataRange: [],
+  startMonth: '',
+  endMonth: '',
   grad_forecast_month: 1,
   grad_month: '',
   grad_lat_lon: '',
@@ -107,13 +115,10 @@ watch(
 
 // 原有的watch保持不变
 watch(
-  [() => formData.value.dataRange, () => formData.value.grad_forecast_month],
-  ([newDataRange, newForecastMonth]) => {
-    if (newDataRange && newDataRange[1] && newForecastMonth) {
-      const endDate = new Date(
-        newDataRange[1].substring(0, 4),
-        parseInt(newDataRange[1].substring(4)) - 1
-      )
+  [() => formData.value.endMonth, () => formData.value.grad_forecast_month],
+  ([newEndMonth, newForecastMonth]) => {
+    if (newEndMonth && newForecastMonth) {
+      const endDate = new Date(newEndMonth.substring(0, 4), parseInt(newEndMonth.substring(4)) - 1)
       endDate.setMonth(endDate.getMonth() + newForecastMonth)
       formData.value.grad_month = String(endDate.getMonth() + 1).padStart(2, '0')
     } else {
@@ -154,9 +159,8 @@ const pollAnalysisResult = async () => {
 
 const submitForm = async () => {
   if (
-    !formData.value.dataRange ||
-    !formData.value.dataRange[0] ||
-    !formData.value.dataRange[1] ||
+    !formData.value.startMonth ||
+    !formData.value.endMonth ||
     !formData.value.grad_month ||
     !formData.value.grad_forecast_month
   ) {
@@ -169,8 +173,8 @@ const submitForm = async () => {
     isOK.value = false
 
     const res = await useDynamicsAnalysis(
-      formData.value.dataRange[0],
-      formData.value.dataRange[1],
+      formData.value.startMonth,
+      formData.value.endMonth,
       formData.value.grad_type,
       formData.value.grad_month,
       formData.value.x1,
