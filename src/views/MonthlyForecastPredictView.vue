@@ -1,10 +1,21 @@
 <template>
-  <ImageUploadPredictor :image-limit="12" :time-mode="'monthly'" v-model:selected-date="selectedDate"
-    :get-prediction-result="getMonthPredictionResult" :submit-prediction-request="useMonthPrediction"
-    class="predictor-container">
+  <ImageUploadPredictor
+    :image-limit="12"
+    :time-mode="'monthly'"
+    v-model:selected-date="selectedDate"
+    :get-prediction-result="getMonthPredictionResult"
+    :submit-prediction-request="useMonthPrediction"
+    class="predictor-container"
+  >
     <template #date-picker>
-      <el-date-picker v-model="selectedDate" type="month" placeholder="请选择月份" format="YYYY/MM/DD"
-        value-format="YYYY/MM/DD" class="date-picker" />
+      <el-date-picker
+        v-model="selectedDate"
+        type="month"
+        placeholder="请选择月份"
+        format="YYYY/MM/DD"
+        value-format="YYYY/MM/DD"
+        class="date-picker"
+      />
     </template>
   </ImageUploadPredictor>
 </template>

@@ -323,7 +323,7 @@ const pollPredictionResult = async () => {
 
   try {
     const response = await props.getPredictionResult(taskId.value)
-    
+
     if (response.success && response.data && response.data.images) {
       images.value = response.data.images
       showResults.value = true
@@ -350,14 +350,14 @@ const submitPrediction = async () => {
   try {
     isLoading.value = true
     const response = await props.submitPredictionRequest(props.selectedDate, uploadedPaths.value)
-    
+
     if (response.success && response.data && response.data.task_id) {
       taskId.value = response.data.task_id
-      let attempts = 0;
-      const maxAttempts = 30; // 设置最大尝试次数，约为 1 分钟 (30 * 2秒)
-      
+      let attempts = 0
+      const maxAttempts = 30 // 设置最大尝试次数，约为 1 分钟 (30 * 2秒)
+
       pollingInterval.value = setInterval(() => {
-        attempts++;
+        attempts++
         if (attempts > maxAttempts) {
           clearInterval(pollingInterval.value)
           isLoading.value = false

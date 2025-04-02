@@ -3,10 +3,8 @@ import request from './request'
 export async function useDayPrediction(startDate, imagePaths) {
   try {
     const response = await request.post('/api/predict/day', {
-
       start_date: startDate,
       image_paths: imagePaths
-
     })
 
     return response
@@ -31,7 +29,6 @@ export async function useMonthPrediction(startDate, imagePaths) {
     const response = await request.post('/api/predict/month', {
       start_date: startDate,
       image_paths: imagePaths
-
     })
 
     return response
@@ -71,7 +68,16 @@ export async function useRealtimeMonthPrediction() {
   }
 }
 
-export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_month, x1, y1, x2, y2) {
+export async function useDynamicsAnalysis(
+  start_time,
+  end_time,
+  grad_type,
+  grad_month,
+  x1,
+  y1,
+  x2,
+  y2
+) {
   try {
     // 创建基本请求参数
     const params = {
@@ -79,21 +85,21 @@ export async function useDynamicsAnalysis(start_time, end_time, grad_type, grad_
       end_time: end_time,
       grad_type: grad_type,
       grad_month: grad_month
-    };
+    }
 
     // 只有当所有坐标值都不为空时才添加到请求参数中
     if (x1 != null && y1 != null && x2 != null && y2 != null) {
-      params.x1 = x1;
-      params.y1 = y1;
-      params.x2 = x2;
-      params.y2 = y2;
+      params.x1 = x1
+      params.y1 = y1
+      params.x2 = x2
+      params.y2 = y2
     }
 
-    const response = await request.post('/api/dynamics/analysis', params);
-    return response;
+    const response = await request.post('/api/dynamics/analysis', params)
+    return response
   } catch (error) {
-    console.error('Error fetching dynamics analysis:', error);
-    throw error;
+    console.error('Error fetching dynamics analysis:', error)
+    throw error
   }
 }
 

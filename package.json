@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern .gitignore",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-pattern .gitignore --ignore-pattern node_modules --ignore-pattern dist",
     "format": "prettier --write src/"
   },
   "dependencies": {

@@ -9,7 +9,7 @@
       autoresize
     />
     <div v-else class="loading-indicator">加载中，请稍后...</div>
-    
+
     <div class="controls">
       <div class="date-display">{{ currentDate }}</div>
       <div class="playback-controls">
@@ -37,7 +37,7 @@ const props = defineProps({
   images: {
     type: Array,
     default: () => []
-  },
+  }
 })
 
 // 播放控制相关状态
@@ -183,7 +183,7 @@ const initECharts = async () => {
       // 预加载所有图片
       await preloadAllImages()
       isLoading.value = false
-      
+
       // 开始自动播放
       if (props.images.length > 1) {
         startPlayback()
