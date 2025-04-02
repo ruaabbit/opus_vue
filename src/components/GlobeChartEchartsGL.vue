@@ -9,11 +9,20 @@
       autoresize
     />
     <div v-else class="loading-indicator">加载中，请稍后...</div>
+    
+    <div class="controls">
+      <div class="date-display">{{ currentDate }}</div>
+      <div class="playback-controls">
+        <button @click="togglePlayback">{{ isPlaying ? '暂停' : '播放' }}</button>
+        <input type="range" min="1" max="10" v-model.number="playbackSpeed" />
+        <span>速度: {{ playbackSpeed }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, provide, onMounted, nextTick, watch, computed } from 'vue'
+import { ref, provide, onMounted, nextTick, watch, computed, onUnmounted } from 'vue'
 import VChart, { THEME_KEY } from 'vue-echarts'
 
 const isEChartsReady = ref(false)
@@ -29,58 +38,65 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
-  currentIndex: {
-    type: Number,
-    default: 0
-  },
-  autoRotate: {
-    type: Boolean,
-    default: false
-  },
-  targetCoord: {
-    type: Array,
-    default: () => [0, 90]
-  },
-  alpha: {
-    type: Number,
-    default: 60
-  },
-  beta: {
-    type: Number,
-    default: 0
-  },
-  distance: {
-    type: Number,
-    default: 150
-  },
-  minAlpha: {
-    type: Number,
-    default: 0
-  },
-  maxAlpha: {
-    type: Number,
-    default: 90
-  },
-  minDistance: {
-    type: Number,
-    default: 80
-  },
-  maxDistance: {
-    type: Number,
-    default: 300
-  },
-  lightIntensity: {
-    type: Number,
-    default: 3
+})
+
+// 播放控制相关状态
+const currentIndex = ref(0)
+const isPlaying = ref(true)
+const playbackSpeed = ref(3)
+let playbackTimer = null
+
+// 计算当前显示的日期
+const currentDate = computed(() => {
+  if (props.images.length > 0 && currentIndex.value < props.images.length) {
+    return props.images[currentIndex.value].date
   }
+  return ''
 })
 
 // 当前显示的纹理
 const currentTexture = computed(() => {
   if (props.images && props.images.length > 0) {
-    return 'https://seaice.52lxy.one:20443' + props.images[props.currentIndex].path
+    return 'https://seaice.52lxy.one:20443' + props.images[currentIndex.value].path
   } else {
     return null
+  }
+})
+
+// 切换到下一张图片
+const nextImage = () => {
+  if (props.images.length === 0) return
+  currentIndex.value = (currentIndex.value + 1) % props.images.length
+}
+
+// 控制播放/暂停
+const togglePlayback = () => {
+  isPlaying.value = !isPlaying.value
+  if (isPlaying.value) {
+    startPlayback()
+  } else {
+    stopPlayback()
+  }
+}
+
+// 开始播放
+const startPlayback = () => {
+  stopPlayback() // 确保没有多个定时器运行
+  playbackTimer = setInterval(nextImage, 1000 / playbackSpeed.value)
+}
+
+// 停止播放
+const stopPlayback = () => {
+  if (playbackTimer) {
+    clearInterval(playbackTimer)
+    playbackTimer = null
+  }
+}
+
+// 监听播放速度变化
+watch(playbackSpeed, () => {
+  if (isPlaying.value) {
+    startPlayback()
   }
 })
 
@@ -116,15 +132,8 @@ const option = ref({
       }
     },
     viewControl: {
-      autoRotate: props.autoRotate,
-      targetCoord: props.targetCoord,
-      alpha: props.alpha,
-      beta: props.beta,
-      distance: props.distance,
-      minAlpha: props.minAlpha,
-      maxAlpha: props.maxAlpha,
-      minDistance: props.minDistance,
-      maxDistance: props.maxDistance
+      autoRotate: false,
+      targetCoord: [0, 90]
     },
     layers: [
       {
@@ -150,15 +159,7 @@ const updateOption = {
 watch(currentTexture, (newTexture) => {
   if (window.echarts && chartContainer.value) {
     if (isEChartsReady.value) {
-      chartContainer.value.getEchartsInstance().setOption({
-        globe: {
-          layers: [
-            {
-              texture: newTexture
-            }
-          ]
-        }
-      })
+      option.value.globe.layers[0].texture = newTexture
     }
   }
 })
@@ -182,6 +183,11 @@ const initECharts = async () => {
       // 预加载所有图片
       await preloadAllImages()
       isLoading.value = false
+      
+      // 开始自动播放
+      if (props.images.length > 1) {
+        startPlayback()
+      }
     } else {
       throw new Error('Container dimensions not available')
     }
@@ -205,7 +211,7 @@ const preloadAllImages = async () => {
       img.onload = () => resolve(imageUrl)
       img.onerror = () => {
         console.warn(`Failed to preload image: ${imageUrl}`)
-        resolve(null) // 即使加载失败也继续，不阻止整体流程
+        resolve(null)
       }
       img.src = imageUrl
     })
@@ -223,6 +229,10 @@ provide(THEME_KEY, 'dark')
 
 onMounted(async () => {
   await initECharts()
+})
+
+onUnmounted(() => {
+  stopPlayback()
 })
 </script>
 
@@ -245,6 +255,42 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.1);
+}
+
+.controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 12px;
+  border-radius: 8px;
+  color: white;
+  text-align: center;
+}
+
+.date-display {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playback-controls button {
+  padding: 5px 15px;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.playback-controls button:hover {
+  background-color: #1565c0;
 }
 
 :deep(.echarts) {
