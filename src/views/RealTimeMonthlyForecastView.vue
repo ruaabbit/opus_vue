@@ -7,7 +7,8 @@
           <LoadingAnimation />
         </div>
         <div v-else class="globe-wrapper">
-          <GlobeChartEchartsGL class="globe-chart" :images="images" />
+          <!-- <GlobeChartEchartsGL class="globe-chart" :images="images" /> -->
+          <GlobeChartCesium class="globe-chart" :images="images" />
         </div>
       </div>
     </div>
@@ -18,7 +19,8 @@
 import { ref, onMounted } from 'vue'
 import { useRealtimeMonthPrediction } from '@/common/api'
 import LoadingAnimation from '../components/LoadingAnimation.vue'
-import GlobeChartEchartsGL from '../components/GlobeChartEchartsGL.vue'
+// import GlobeChartEchartsGL from '../components/GlobeChartEchartsGL.vue'
+import GlobeChartCesium from '../components/GlobeChartCesium.vue'
 
 const images = ref([])
 const isLoading = ref(true)
