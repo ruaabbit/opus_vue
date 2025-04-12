@@ -8,7 +8,7 @@
         </div>
         <div v-else class="globe-wrapper">
           <!-- <GlobeChartEchartsGL class="globe-chart" :images="images" /> -->
-          <GlobeChartCesium class="globe-chart" />
+          <GlobeChartCesium class="globe-chart" :images="images" />
         </div>
       </div>
     </div>
