@@ -79,6 +79,9 @@ let fadeTimer = null
 const fadeDuration = 300 // ms for fade transition
 const fadeSteps = 15 // Number of steps in the fade animation
 
+// Cesium readiness state
+const cesiumReady = ref(false)
+
 // Function to store refs in an array, ensuring order
 const setLayerRef = (el, index) => {
   if (el) {
@@ -96,6 +99,7 @@ const currentDate = computed(() => {
 
 const onCesiumReady = (cesiumInstance) => {
   Cesium = cesiumInstance
+  cesiumReady.value = true
   console.log('Cesium is ready!')
 }
 
@@ -103,8 +107,8 @@ const onCesiumReady = (cesiumInstance) => {
 const onViewerReady = ({ viewer }) => {
   myViewer = viewer
   console.log('Viewer is ready')
-  // Set initial view
-  if (myViewer) {
+  // 确保 Cesium 已初始化
+  if (myViewer && cesiumReady.value) {
     myViewer.camera.flyTo({
       destination: Cesium.Cartesian3.fromDegrees(0, 90, 10000000),
       orientation: {
@@ -113,8 +117,7 @@ const onViewerReady = ({ viewer }) => {
         roll: 0.0
       }
     })
-    
-    // Viewer 初始化后，主动检查是否可以开始播放
+
     setTimeout(() => {
       if (isPlaying.value && imagesLoaded.value && layerRefs.value.length === props.images.length) {
         tryStartPlayback()
@@ -153,7 +156,7 @@ const preloadImages = async (imageList) => {
   try {
     await Promise.all(promises)
     console.log('All images preloaded (or attempted).')
-    
+
     // 添加一个小延迟，确保 Cesium 图层已完全初始化
     setTimeout(() => {
       imagesLoaded.value = true
@@ -263,14 +266,13 @@ const stopPlayback = () => {
 
 const startPlayback = () => {
   if (
+    !cesiumReady.value ||
     !myViewer ||
     !imagesLoaded.value ||
     !isPlaying.value ||
     layerRefs.value.length !== props.images.length
   ) {
-    console.log('Conditions not met for starting playback.', {
-      /* ... */
-    })
+    console.log('Conditions not met for starting playback.')
     return
   }
   stopPlayback()
@@ -302,8 +304,8 @@ const startPlayback = () => {
 
 // 优化 tryStartPlayback 确保能正确启动
 const tryStartPlayback = () => {
-  if (!isPlaying.value || props.images.length === 0) return
-  
+  if (!cesiumReady.value || !isPlaying.value || props.images.length === 0) return
+
   // 检查是否所有图层引用都已准备好
   if (layerRefs.value.length !== props.images.length) {
     console.log('Layer refs not ready yet, waiting...')
@@ -311,13 +313,13 @@ const tryStartPlayback = () => {
     setTimeout(tryStartPlayback, 100)
     return
   }
-  
+
   // 检查是否所有图片已加载
   if (!imagesLoaded.value) {
     console.log('Images not loaded yet, waiting...')
     return
   }
-  
+
   console.log('All conditions met, starting playback')
   startPlayback()
 }
@@ -372,7 +374,9 @@ watch(
   () => props.images,
   (newImages) => {
     console.log('Images prop changed. Clearing refs and stopping playback.')
-    stopPlayback()
+    if (cesiumReady.value) {
+      stopPlayback()
+    }
     layerRefs.value = []
     currentIndex.value = 0
     imagesLoaded.value = false
@@ -401,6 +405,7 @@ onMounted(() => {
 onUnmounted(() => {
   stopPlayback()
   layerRefs.value = []
+  cesiumReady.value = false
 })
 </script>
 
