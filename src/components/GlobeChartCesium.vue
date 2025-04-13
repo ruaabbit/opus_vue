@@ -6,6 +6,8 @@
       @ready="onViewerReady"
       :baseLayer="false"
       :showCredit="false"
+      :minificationFilter="9985"
+      :magnificationFilter="9985"
     >
       <!-- 底图层 - 基础海冰背景图 -->
       <vc-layer-imagery :sortOrder="0">
@@ -18,8 +20,6 @@
         :key="imageData.path || index"
         :ref="(el) => setLayerRef(el, index)"
         :show="false"
-        :brightness="brightness"
-        :contrast="contrast"
         :sortOrder="10"
         :alpha="0"
       >
@@ -62,8 +62,6 @@ const props = defineProps({
 })
 
 // 图层显示状态参数
-const brightness = ref(1) // 图层亮度设置
-const contrast = ref(1) // 图层对比度设置
 let myViewer = null // Cesium查看器实例
 let Cesium = null // Cesium API实例
 
