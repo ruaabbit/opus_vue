@@ -60,13 +60,7 @@
           <el-tabs v-model="activeTab" @tab-change="handleTabChange">
             <el-tab-pane label="空间不确定性分布" name="spatial">
               <div class="globe-container">
-                <GlobeChartEchartsGL
-                  class="globe-chart"
-                  :baseTexture="baseTexture"
-                  :auto-rotate="true"
-                  :target-coord="[0, 90]"
-                  :distance="250"
-                />
+                <GlobeChartCesium class="globe-chart" />
                 <div class="legend">
                   <div class="legend-title">不确定性强度 (标准差)</div>
                   <div class="legend-gradient"></div>
@@ -132,7 +126,8 @@
 <script setup>
 import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import GlobeChartEchartsGL from '../components/GlobeChartEchartsGL.vue'
+// import GlobeChartEchartsGL from '../components/GlobeChartEchartsGL.vue'
+import GlobeChartCesium from '@/components/GlobeChartCesium.vue'
 import LoadingAnimation from '../components/LoadingAnimation.vue'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts/core'
@@ -166,7 +161,6 @@ const formData = reactive({
 const isLoading = ref(false)
 const showResults = ref(false)
 const activeTab = ref('spatial')
-const baseTexture = '/seaice/picture/sea_ice_map.png'
 
 // 预测时长选项
 const forecastLengthOptions = computed(() => {
