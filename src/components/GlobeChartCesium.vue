@@ -11,7 +11,7 @@
     >
       <!-- 底图层 - 基础海冰背景图 -->
       <vc-layer-imagery :sortOrder="0">
-        <vc-imagery-provider-singletile :url="'/seaice/picture/sea_ice_map.png'" />
+        <vc-imagery-provider-singletile :url="'/seaice/picture/sea_ice_map.webp'" />
       </vc-layer-imagery>
 
       <!-- 动态海冰图层 - 使用v-for渲染所有时序图层 -->

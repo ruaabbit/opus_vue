@@ -8,7 +8,7 @@
       @mouseup="endSelection"
       @mouseleave="endSelection"
     >
-      <img src="/picture/land_image.png" alt="Selectable Image" draggable="false" />
+      <img src="/picture/land_image.webp" alt="Selectable Image" draggable="false" />
       <div
         v-if="isSelecting"
         class="selection"
