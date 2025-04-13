@@ -1,31 +1,35 @@
 <template>
   <el-row ref="viewerContainer" class="demo-viewer">
-    <!-- Cesium地图查看器组件，监听初始化事件 -->
-    <vc-viewer
-      @cesiumReady="onCesiumReady"
-      @ready="onViewerReady"
-      :baseLayer="false"
-      :showCredit="false"
-      :minificationFilter="9985"
-      :magnificationFilter="9985"
-    >
-      <!-- 底图层 - 基础海冰背景图 -->
-      <vc-layer-imagery :sortOrder="0">
-        <vc-imagery-provider-singletile :url="'/seaice/picture/sea_ice_map.webp'" />
-      </vc-layer-imagery>
-
-      <!-- 动态海冰图层 - 使用v-for渲染所有时序图层 -->
-      <vc-layer-imagery
-        v-for="(imageData, index) in props.images"
-        :key="imageData.path || index"
-        :ref="(el) => setLayerRef(el, index)"
-        :show="false"
-        :sortOrder="10"
-        :alpha="0"
+    <vc-config-provider :cesium-path="'/seaice/Cesium/Cesium.js'">
+      <!-- Cesium地图查看器组件，监听初始化事件 -->
+      <vc-viewer
+        @cesiumReady="onCesiumReady"
+        @ready="onViewerReady"
+        :baseLayer="false"
+        :showCredit="false"
+        :minificationFilter="9985"
+        :magnificationFilter="9985"
       >
-        <vc-imagery-provider-singletile :url="'https://seaice.52lxy.one:20443' + imageData.path" />
-      </vc-layer-imagery>
-    </vc-viewer>
+        <!-- 底图层 - 基础海冰背景图 -->
+        <vc-layer-imagery :sortOrder="0">
+          <vc-imagery-provider-singletile :url="'/seaice/picture/sea_ice_map.webp'" />
+        </vc-layer-imagery>
+
+        <!-- 动态海冰图层 - 使用v-for渲染所有时序图层 -->
+        <vc-layer-imagery
+          v-for="(imageData, index) in props.images"
+          :key="imageData.path || index"
+          :ref="(el) => setLayerRef(el, index)"
+          :show="false"
+          :sortOrder="10"
+          :alpha="0"
+        >
+          <vc-imagery-provider-singletile
+            :url="'https://seaice.52lxy.one:20443' + imageData.path"
+          />
+        </vc-layer-imagery>
+      </vc-viewer>
+    </vc-config-provider>
     <!-- 控制UI - 包含加载状态、日期显示和播放控制 -->
     <div class="controls">
       <div v-if="isPreloading || isFading" class="loading-indicator">
@@ -52,6 +56,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { VcConfigProvider, VcViewer, VcLayerImagery, VcImageryProviderSingletile } from 'vue-cesium'
 
 // 组件属性定义
 const props = defineProps({
