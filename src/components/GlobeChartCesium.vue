@@ -1,7 +1,12 @@
 <template>
   <el-row ref="viewerContainer" class="demo-viewer">
     <!-- Cesium地图查看器组件，监听初始化事件 -->
-    <vc-viewer @cesiumReady="onCesiumReady" @ready="onViewerReady" :baseLayer="false">
+    <vc-viewer
+      @cesiumReady="onCesiumReady"
+      @ready="onViewerReady"
+      :baseLayer="false"
+      :showCredit="false"
+    >
       <!-- 底图层 - 基础海冰背景图 -->
       <vc-layer-imagery :sortOrder="0">
         <vc-imagery-provider-singletile :url="'/seaice/picture/sea_ice_map.png'" />
