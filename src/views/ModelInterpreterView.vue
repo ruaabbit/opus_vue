@@ -3,42 +3,68 @@
     <div class="main-content">
       <el-card class="box-card">
         <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
-          <el-form-item label="数据范围">
+          <el-form-item label="数据范围" required>
             <el-date-picker
               v-model="formData.dataRange[0]"
               type="date"
               placeholder="选择开始日期"
               format="YYYY-MM-DD"
               value-format="YYYYMMDD"
+              @change="validateDateRange"
             />
             <span style="margin: 0 8px">至</span>
             <el-date-picker
               v-model="formData.dataRange[1]"
               type="date"
-              placeholder="结束日期 (自动设置为开始日期+13天)"
+              placeholder="选择结束日期"
               format="YYYY-MM-DD"
               value-format="YYYYMMDD"
-              disabled
+              :disabled-date="disabledEndDate"
+              @change="validateDateRange"
+            />
+            <div v-if="dateError" class="date-error-tip">
+              <span style="color: #f56c6c; font-size: 12px">{{ dateError }}</span>
+            </div>
+          </el-form-item>
+
+          <el-form-item label="预测间隔(天)" required>
+            <el-input-number
+              v-model="formData.pred_gap"
+              :min="1"
+              :max="7"
+              placeholder="预测间隔天数"
             />
           </el-form-item>
 
-          <el-form-item label="目标日期">
-            <el-input v-model="formData.grad_day" placeholder="请输入目标日期" />
-          </el-form-item>
-
-          <el-form-item label="分析范围">
-            <el-input
-              v-model="formData.grad_lat_lon"
-              disabled
-              placeholder="请输入经纬度范围（目前只支持全范围）"
-            />
-          </el-form-item>
-
-          <el-form-item label="分析目标">
+          <el-form-item label="分析目标" required>
             <el-radio-group v-model="formData.grad_type">
               <el-radio value="sum">海冰面积</el-radio>
               <el-radio value="l2">L2范数</el-radio>
             </el-radio-group>
+          </el-form-item>
+
+          <el-form-item label="选定位置">
+            <el-input
+              v-model="formData.position"
+              placeholder="输入位置信息，例如100,100;100,200;200,100;200,200"
+            />
+            <div v-if="formData.position" style="margin-top: 8px">
+              <el-button @click="formData.position = ''" size="small">取消选择</el-button>
+            </div>
+          </el-form-item>
+
+          <el-form-item label="选定变量">
+            <el-radio-group v-model="formData.variable">
+              <el-radio label="1">海冰密集度(SIC)</el-radio>
+              <el-radio label="2">海冰U分量(SI_U)</el-radio>
+              <el-radio label="3">海冰V分量(SI_V)</el-radio>
+              <el-radio label="4">2米温度(T2M)</el-radio>
+              <el-radio label="5">10米U风(U10M)</el-radio>
+              <el-radio label="6">10米V风(V10M)</el-radio>
+            </el-radio-group>
+            <div v-if="formData.variable" style="margin-top: 8px">
+              <el-button @click="formData.variable = ''" size="small">取消选择</el-button>
+            </div>
           </el-form-item>
 
           <el-form-item>
@@ -62,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useModelInterpreter, getModelInterpreter } from '@/common/api'
 import ModelInterpreterViewer from '@/components/ModelInterpreterViewer.vue'
@@ -70,44 +96,51 @@ import LoadingAnimation from '@/components/LoadingAnimation.vue'
 // import ImageSelector from '@/components/ImageSelector.vue'
 
 const formData = ref({
-  dataRange: [],
-  grad_day: '',
-  grad_lat_lon: '',
-  grad_type: 'sum'
+  dataRange: [], // [start_time, end_time]
+  pred_gap: 1, // 默认为1天
+  grad_type: 'sum',
+  position: '', // 选定位置
+  variable: '' // 选定变量
 })
 
 const images = ref([])
 const isOK = ref(false)
 const isLoading = ref(false)
 const currentTaskId = ref(null)
+const dateError = ref('')
 
-// 添加新的 watch，确保结束日期始终为开始日期+13天
-watch(
-  () => formData.value.dataRange[0],
-  (startDate) => {
-    if (startDate) {
-      // 将开始日期字符串转换为 Date 对象
-      const start = new Date(
-        startDate.substring(0, 4),
-        parseInt(startDate.substring(4, 6)) - 1,
-        parseInt(startDate.substring(6, 8))
-      )
+// 禁用不符合条件的结束日期（必须至少比开始日期晚13天）
+const disabledEndDate = (date) => {
+  if (!formData.value.dataRange[0]) return false
 
-      // 计算结束日期（开始日期 + 13天）
-      const end = new Date(start)
-      end.setDate(start.getDate() + 13)
+  const startDate = new Date(
+    formData.value.dataRange[0].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+  )
+  const minEndDate = new Date(startDate)
+  minEndDate.setDate(startDate.getDate() + 12)
 
-      // 格式化结束日期为 YYYYMMDD 格式
-      const endFormatted =
-        end.getFullYear() +
-        String(end.getMonth() + 1).padStart(2, '0') +
-        String(end.getDate()).padStart(2, '0')
+  return date.getTime() < minEndDate.getTime()
+}
 
-      // 更新 dataRange 数组
-      formData.value.dataRange = [startDate, endFormatted]
+// 验证日期范围
+const validateDateRange = () => {
+  const { dataRange } = formData.value
+  dateError.value = ''
+
+  if (dataRange[0] && dataRange[1]) {
+    const startDate = new Date(dataRange[0].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+    const endDate = new Date(dataRange[1].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+    const daysDiff = Math.floor((endDate - startDate) / (24 * 60 * 60 * 1000))
+
+    if (daysDiff < 13) {
+      dateError.value = '结束日期至少需要比开始日期晚13天'
+      formData.value.dataRange[1] = '' // 清空不合规的结束日期
+      return false
     }
   }
-)
+
+  return true
+}
 
 const pollAnalysisResult = async () => {
   if (!currentTaskId.value) return
@@ -147,9 +180,16 @@ const submitForm = async () => {
     !formData.value.dataRange ||
     !formData.value.dataRange[0] ||
     !formData.value.dataRange[1] ||
-    !formData.value.grad_day
+    !formData.value.pred_gap ||
+    !formData.value.grad_type
   ) {
-    ElMessage.error('请填写完整的分析参数')
+    ElMessage.error('请填写必填的分析参数')
+    return
+  }
+
+  // 提交前再次验证日期范围
+  if (!validateDateRange()) {
+    ElMessage.error(dateError.value || '日期范围不符合要求')
     return
   }
 
@@ -160,8 +200,10 @@ const submitForm = async () => {
     const res = await useModelInterpreter(
       formData.value.dataRange[0],
       formData.value.dataRange[1],
+      formData.value.pred_gap,
       formData.value.grad_type,
-      formData.value.grad_day
+      formData.value.position,
+      formData.value.variable
     )
     if (!res.success) {
       isLoading.value = false
@@ -249,6 +291,10 @@ onUnmounted(() => {
   max-width: 100%; /* 确保结果区域可以使用全部可用宽度 */
 }
 
+.date-error-tip {
+  margin-top: 4px;
+}
+
 /* 响应式布局调整 */
 @media (min-width: 768px) {
   .container-layout {
@@ -259,12 +305,5 @@ onUnmounted(() => {
     width: 100%; /* 全宽显示 */
     max-width: none; /* 移除最大宽度限制 */
   }
-
-  /* 以下两个样式可以移除，因为我们已经隐藏了sidebar */
-  /*
-    .sidebar {
-      width: 0;
-    }
-    */
 }
 </style>

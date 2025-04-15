@@ -113,14 +113,20 @@ export async function getDynamicsAnalysisResult(taskId) {
   }
 }
 
-export async function useModelInterpreter(start_time, end_time, grad_type, grad_day) {
+export async function useModelInterpreter(start_time, end_time, pred_gap, grad_type, position, variable) {
   try {
-    const response = await request.post('/api/model/interpreter', {
-      start_time: start_time,
-      end_time: end_time,
-      grad_type: grad_type,
-      grad_day: grad_day
-    })
+    const params = {
+      start_time,
+      end_time,
+      pred_gap,
+      grad_type
+    }
+    
+    // 只有当position和variable有值时才添加到请求参数
+    if (position) params.position = position
+    if (variable) params.variable = variable
+
+    const response = await request.post('/api/model/interpreter', params)
     return response
   } catch (error) {
     console.error('Error fetching model interpreter:', error)

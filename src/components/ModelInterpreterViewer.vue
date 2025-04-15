@@ -1,16 +1,26 @@
 <template>
   <div class="dynamics-viewer">
-    <!-- 标题区域 -->
-    <h2 class="section-title">逐日模型可解释性分析结果热图</h2>
+    <div class="viewer-header">
+      <h2 class="section-title">逐日模型可解释性分析结果热图</h2>
+      <div class="viewer-controls" v-if="props.images && props.images.length > 0"></div>
+    </div>
 
-    <!-- 单张图片显示 -->
-    <div v-if="props.images && props.images.length > 0" class="single-image-container">
-      <div class="image-container">
+    <!-- 多张图片网格显示 -->
+    <div v-if="props.images && props.images.length > 0" class="images-grid">
+      <div
+        v-for="(image, index) in props.images"
+        :key="index"
+        class="image-container"
+        v-loading="isLoading"
+      >
         <img
-          :src="getImageUrl(props.images[0])"
-          alt="可解释性分析结果"
+          :src="getImageUrl(image)"
+          :alt="`可解释性分析结果 ${index + 1}`"
           class="analysis-image"
-          @click="viewImage(getImageUrl(props.images[0]))"
+          :style="{ transform: 'scale(1)' }"
+          @click="viewImage(getImageUrl(image))"
+          @load="handleImageLoad"
+          @error="handleImageError"
         />
       </div>
     </div>
@@ -52,7 +62,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { ElEmpty } from 'element-plus'
+import { ElEmpty, ElMessage } from 'element-plus'
 
 import { getImageUrl } from '@/common/util'
 
@@ -60,6 +70,7 @@ const props = defineProps({ images: { type: Array, required: true } })
 
 const selectedImage = ref(null)
 const scale = ref(1)
+const isLoading = ref(true)
 
 // 查看放大图片
 const viewImage = (image) => {
@@ -76,13 +87,41 @@ const handleWheel = (event) => {
   scale.value = newScale
   event.preventDefault()
 }
+
+// 处理图片加载完成
+const handleImageLoad = () => {
+  isLoading.value = false
+}
+
+// 处理图片加载失败
+const handleImageError = () => {
+  isLoading.value = false
+  ElMessage.error('图片加载失败')
+}
 </script>
 
 <style scoped>
 .dynamics-viewer {
   width: 100%;
-  max-width: 1200px; /* 增加最大宽度 */
+  max-width: 1200px;
   margin: 0 auto;
+  background: #f5f7fa;
+  padding: 2rem;
+  border-radius: 8px;
+}
+
+.viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.viewer-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .section-title {
@@ -93,22 +132,32 @@ const handleWheel = (event) => {
   color: #303133;
 }
 
-/* 单张图片容器 */
-.single-image-container {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+.images-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
   padding: 1rem;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
+  width: 100%;
+  align-items: center;
 }
 
 .image-container {
   position: relative;
   width: 100%;
   overflow: hidden;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.image-container:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .analysis-image {
@@ -152,15 +201,15 @@ const handleWheel = (event) => {
   text-align: center;
 }
 
-/* 模态框样式 */
 .modal-overlay {
   position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.85);
   z-index: 9999;
+  backdrop-filter: blur(4px);
 }
 
 .modal-content {
@@ -169,10 +218,10 @@ const handleWheel = (event) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 95%;
+  max-height: 95%;
   transform: scale(1);
-  transition: transform 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-image {
@@ -202,7 +251,6 @@ const handleWheel = (event) => {
   height: 1.5rem;
 }
 
-/* 响应式布局调整 */
 @media (max-width: 768px) {
   .section-title {
     font-size: 1.25rem;
