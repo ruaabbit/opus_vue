@@ -67,6 +67,14 @@ const props = defineProps({
   bottomRight: {
     type: Object,
     default: () => ({ x: null, y: null })
+  },
+  width: {
+    type: Number,
+    default: 432
+  },
+  height: {
+    type: Number,
+    default: 432
   }
 })
 
@@ -180,8 +188,8 @@ const clearSelection = () => {
 
 .image-container {
   position: relative;
-  width: 432px;
-  height: 432px;
+  width: v-bind(width + 'px');
+  height: v-bind(height + 'px');
   user-select: none;
 }
 

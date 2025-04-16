@@ -38,19 +38,20 @@
 
           <el-form-item label="分析目标" required>
             <el-radio-group v-model="formData.grad_type">
-              <el-radio value="sum">海冰面积</el-radio>
-              <el-radio value="l2">L2范数</el-radio>
+              <el-radio value="sum">均值</el-radio>
+              <el-radio value="l2">分布</el-radio>
             </el-radio-group>
           </el-form-item>
 
           <el-form-item label="选定位置">
-            <el-input
-              v-model="formData.position"
-              placeholder="输入位置信息，例如100,100;100,200;200,100;200,200"
+            <ImageSelector
+              v-model:topLeft="topLeftCoord"
+              v-model:bottomRight="bottomRightCoord"
+              @update:topLeft="updatePosition"
+              @update:bottomRight="updatePosition"
+              :width="304"
+              :height="448"
             />
-            <div v-if="formData.position" style="margin-top: 8px">
-              <el-button @click="formData.position = ''" size="small">取消选择</el-button>
-            </div>
           </el-form-item>
 
           <el-form-item label="选定变量">
@@ -79,7 +80,6 @@
         </div>
 
         <div v-if="!isLoading && isOK" class="result-section">
-          <!-- 使用新的DynamicsAnalysisViewer组件替换ArcticSeaIceViewer -->
           <ModelInterpreterViewer :images="images" class="full-width" />
         </div>
       </el-card>
@@ -93,7 +93,7 @@ import { ElMessage } from 'element-plus'
 import { useModelInterpreter, getModelInterpreter } from '@/common/api'
 import ModelInterpreterViewer from '@/components/ModelInterpreterViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
-// import ImageSelector from '@/components/ImageSelector.vue'
+import ImageSelector from '@/components/ImageSelector.vue'
 
 const formData = ref({
   dataRange: [], // [start_time, end_time]
@@ -102,6 +102,17 @@ const formData = ref({
   position: '', // 选定位置
   variable: '' // 选定变量
 })
+
+const topLeftCoord = ref({ x: null, y: null })
+const bottomRightCoord = ref({ x: null, y: null })
+
+const updatePosition = () => {
+  if (topLeftCoord.value.x !== null && bottomRightCoord.value.x !== null) {
+    formData.value.position = `${topLeftCoord.value.y},${topLeftCoord.value.x};${bottomRightCoord.value.y},${topLeftCoord.value.x};${topLeftCoord.value.y},${bottomRightCoord.value.x};${bottomRightCoord.value.y},${bottomRightCoord.value.x}`
+  } else {
+    formData.value.position = ''
+  }
+}
 
 const images = ref([])
 const isOK = ref(false)
