@@ -14,7 +14,7 @@
         placeholder="选择日期"
         format="YYYY/MM/DD"
         value-format="YYYY/MM/DD"
-        class="full-width date-picker"
+        class="date-picker"
       />
     </template>
   </ImageUploadPredictor>
