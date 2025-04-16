@@ -1,35 +1,6 @@
 <template>
   <el-row ref="viewerContainer" class="demo-viewer">
-    <vc-config-provider :cesium-path="'/seaice/Cesium/Cesium.js'">
-      <!-- Cesium地图查看器组件，监听初始化事件 -->
-      <vc-viewer
-        @cesiumReady="onCesiumReady"
-        @ready="onViewerReady"
-        :baseLayer="false"
-        :showCredit="false"
-        :minificationFilter="9985"
-        :magnificationFilter="9985"
-      >
-        <!-- 底图层 - 基础海冰背景图 -->
-        <vc-layer-imagery :sortOrder="0">
-          <vc-imagery-provider-singletile :url="'/seaice/picture/sea_ice_map.webp'" />
-        </vc-layer-imagery>
-
-        <!-- 动态海冰图层 - 使用v-for渲染所有时序图层 -->
-        <vc-layer-imagery
-          v-for="(imageData, index) in props.images"
-          :key="imageData.path || index"
-          :ref="(el) => setLayerRef(el, index)"
-          :show="false"
-          :sortOrder="10"
-          :alpha="0"
-        >
-          <vc-imagery-provider-singletile
-            :url="'https://seaice.52lxy.one:20443' + imageData.path"
-          />
-        </vc-layer-imagery>
-      </vc-viewer>
-    </vc-config-provider>
+    <div id="cesiumContainer"></div>
     <!-- 控制UI - 包含加载状态、日期显示和播放控制 -->
     <div class="controls">
       <div v-if="isPreloading || isFading" class="loading-indicator">
@@ -56,7 +27,9 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
-import { VcConfigProvider, VcViewer, VcLayerImagery, VcImageryProviderSingletile } from 'vue-cesium'
+
+/** @type {typeof import('@cesium/engine').Cesium} */
+let Cesium = window.Cesium
 
 // 组件属性定义
 const props = defineProps({
@@ -66,38 +39,21 @@ const props = defineProps({
   }
 })
 
-// 图层显示状态参数
-let myViewer = null // Cesium查看器实例
-let Cesium = null // Cesium API实例
+// 状态管理
+let viewer = null
+let imageryLayers = []
+const currentIndex = ref(0)
+const isPlaying = ref(true)
+const playbackInterval = ref(2)
+const imagesLoaded = ref(false)
+const isPreloading = ref(false)
+const isFading = ref(false)
+let playbackTimer = null
+let fadeTimer = null
 
-// 播放状态管理
-const currentIndex = ref(0) // 当前显示的图像索引
-const isPlaying = ref(true) // 是否正在播放
-const playbackInterval = ref(2) // 播放间隔，单位为秒
-let playbackTimer = null // 播放定时器
-
-// 图像预加载状态
-const imagesLoaded = ref(false) // 图像是否已加载完成
-const isPreloading = ref(false) // 是否正在预加载中
-
-// 图层引用数组，用于保存所有图层实例引用
-const layerRefs = ref([])
-
-// 淡入淡出过渡动画状态
-const isFading = ref(false) // 是否正在执行淡入淡出动画
-let fadeTimer = null // 淡入淡出动画定时器
-const fadeDuration = 300 // 动画持续时间(毫秒)
-const fadeSteps = 15 // 动画步数
-
-// Cesium初始化状态
-const cesiumReady = ref(false) // Cesium是否已经初始化完成
-
-// 存储图层引用的函数，确保按顺序存储
-const setLayerRef = (el, index) => {
-  if (el) {
-    layerRefs.value[index] = el
-  }
-}
+const fadeDuration = 500 // Increased for smoother transitions
+const fadeSteps = 30 // More steps for smoother fading
+let useSmooth = true // Track transition mode
 
 // 计算属性：获取当前日期显示文本
 const currentDate = computed(() => {
@@ -107,48 +63,81 @@ const currentDate = computed(() => {
   return 'N/A'
 })
 
-// Cesium库初始化完成回调函数
-const onCesiumReady = (cesiumInstance) => {
-  Cesium = cesiumInstance
-  cesiumReady.value = true
-  console.log('Cesium is ready!')
-}
-
-// Cesium查看器初始化完成回调函数
-const onViewerReady = ({ viewer }) => {
-  myViewer = viewer
-  console.log('Viewer is ready')
-  // 确保Cesium已初始化后，设置北极视角
-  if (myViewer && cesiumReady.value) {
-    myViewer.camera.flyTo({
-      destination: Cesium.Cartesian3.fromDegrees(0, 90, 10000000), // 北极点位置
-      orientation: {
-        heading: Cesium.Math.toRadians(0.0),
-        pitch: Cesium.Math.toRadians(-90.0), // 俯视视角
-        roll: 0.0
-      }
-    })
-
-    // 短暂延迟后尝试启动播放
-    setTimeout(() => {
-      if (isPlaying.value && imagesLoaded.value && layerRefs.value.length === props.images.length) {
-        tryStartPlayback()
-      }
-    }, 500)
+// 初始化 Cesium viewer
+const initCesium = () => {
+  // 禁用默认的影像提供者
+  const options = {
+    baseLayerPicker: false,
+    geocoder: false,
+    homeButton: false,
+    sceneModePicker: false,
+    navigationHelpButton: false,
+    animation: false,
+    timeline: false,
+    creditContainer: document.createElement('div'), // 隐藏版权信息
+    terrainProvider: undefined,
+    imageryProvider: false
   }
+
+  viewer = new Cesium.Viewer('cesiumContainer', options)
+
+  // 设置北极视角
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(0, 90, 10000000),
+    orientation: {
+      heading: Cesium.Math.toRadians(0.0),
+      pitch: Cesium.Math.toRadians(-90.0),
+      roll: 0.0
+    }
+  })
+
+  // 添加基础海冰背景图
+  viewer.imageryLayers.addImageryProvider(
+    new Cesium.SingleTileImageryProvider({
+      url: '/seaice/picture/sea_ice_map.webp'
+    })
+  )
+
+  // 创建时序图层
+  createImageryLayers()
 }
 
-// 预加载图像函数，确保所有图像加载完成
+// 创建图层
+const createImageryLayers = () => {
+  // 清除现有图层
+  imageryLayers.forEach((layer) => {
+    viewer.imageryLayers.remove(layer)
+  })
+  imageryLayers = []
+
+  // 为每个图像创建新图层
+  props.images.forEach((imageData) => {
+    const layer = viewer.imageryLayers.addImageryProvider(
+      new Cesium.SingleTileImageryProvider({
+        url: 'https://seaice.52lxy.one:20443' + imageData.path
+      })
+    )
+    layer.show = false
+    layer.alpha = 0
+    imageryLayers.push(layer)
+  })
+
+  // 预加载图像
+  preloadImages(props.images)
+}
+
+// 预加载图像
 const preloadImages = async (imageList) => {
   if (!imageList || imageList.length === 0) {
     imagesLoaded.value = true
     isPreloading.value = false
     return
   }
+
   isPreloading.value = true
   imagesLoaded.value = false
   console.log('Starting image preloading...')
-  // 创建所有图像加载的Promise数组
+
   const promises = imageList.map((imgData) => {
     return new Promise((resolve) => {
       const img = new Image()
@@ -166,58 +155,55 @@ const preloadImages = async (imageList) => {
       img.src = imgUrl
     })
   })
+
   try {
-    // 等待所有图像加载完成
     await Promise.all(promises)
     console.log('All images preloaded (or attempted).')
 
-    // 添加延迟确保Cesium图层已完全初始化
-    setTimeout(() => {
-      imagesLoaded.value = true
-    }, 300)
+    // Ensure synchronous execution of state updates
+    imagesLoaded.value = true
+    if (imageryLayers.length > 0) {
+      imageryLayers[currentIndex.value].show = true
+      imageryLayers[currentIndex.value].alpha = 1.0
+      if (isPlaying.value) {
+        startPlayback()
+      }
+    }
   } catch (error) {
-    console.error('Error during image preloading phase:', error)
+    console.error('Error during image preloading:', error)
     imagesLoaded.value = false
   } finally {
     isPreloading.value = false
   }
 }
 
-// 图层淡入淡出过渡动画函数
+// 图层淡入淡出过渡动画
 const crossFadeLayers = (oldIndex, newIndex) => {
-  // 如果已有淡入淡出动画在进行，先取消
   if (isFading.value) {
     clearInterval(fadeTimer)
-    console.log('Cancelling previous fade to start new one.')
   }
 
   isFading.value = true
+  const oldLayer = imageryLayers[oldIndex]
+  const newLayer = imageryLayers[newIndex]
 
-  // 获取新旧图层实例
-  const oldLayerInstance = layerRefs.value[oldIndex]
-  const newLayerInstance = layerRefs.value[newIndex]
-  const oldLayer = oldLayerInstance?.cesiumObject
-  const newLayer = newLayerInstance?.cesiumObject
-
-  // 检查图层实例是否存在
   if (!oldLayer || !newLayer) {
-    console.error('Cannot perform fade: Layer instance not found.', {
-      oldIndex,
-      newIndex,
-      oldLayer,
-      newLayer
-    })
+    console.error('Cannot perform fade: Layer not found.')
     isFading.value = false
-    if (newLayer) newLayer.show = true
-    if (oldLayer) oldLayer.show = false
+    if (newLayer) {
+      newLayer.show = true
+      newLayer.alpha = 1.0
+    }
+    if (oldLayer) {
+      oldLayer.show = false
+      oldLayer.alpha = 0
+    }
     return
   }
 
-  // 准备新图层显示
   newLayer.alpha = 0
   newLayer.show = true
 
-  // 执行淡入淡出动画
   let currentStep = 0
   const alphaIncrement = 1.0 / fadeSteps
   const stepDuration = fadeDuration / fadeSteps
@@ -227,13 +213,11 @@ const crossFadeLayers = (oldIndex, newIndex) => {
     const newAlpha = Math.min(1.0, currentStep * alphaIncrement)
     const oldAlpha = Math.max(0.0, 1.0 - newAlpha)
 
-    // 更新透明度值
     newLayer.alpha = newAlpha
     if (oldLayer !== newLayer) {
       oldLayer.alpha = oldAlpha
     }
 
-    // 检查动画是否完成
     if (currentStep >= fadeSteps) {
       clearInterval(fadeTimer)
       newLayer.alpha = 1.0
@@ -246,119 +230,98 @@ const crossFadeLayers = (oldIndex, newIndex) => {
   }, stepDuration)
 }
 
-// 切换到下一张图像的函数
+// 切换到下一张图像
 const nextImage = () => {
-  // 检查条件是否允许切换图像
-  if (
-    props.images.length === 0 ||
-    !imagesLoaded.value ||
-    layerRefs.value.length !== props.images.length ||
-    isFading.value
-  ) {
+  if (props.images.length === 0 || !imagesLoaded.value) {
     return
   }
 
-  // 计算新旧索引
+  // If currently fading, skip this transition
+  if (isFading.value) {
+    return
+  }
+
   const oldIndex = currentIndex.value
   const newIndex = (oldIndex + 1) % props.images.length
-
   currentIndex.value = newIndex
 
-  // 执行淡入淡出切换
-  crossFadeLayers(oldIndex, newIndex)
+  if (useSmooth) {
+    crossFadeLayers(oldIndex, newIndex)
+  } else {
+    // Instant transition
+    imageryLayers[oldIndex].show = false
+    imageryLayers[oldIndex].alpha = 0.0
+    imageryLayers[newIndex].show = true
+    imageryLayers[newIndex].alpha = 1.0
+  }
 }
 
-// 停止播放的函数
+// 停止播放
 const stopPlayback = () => {
-  // 清除播放定时器
   if (playbackTimer) {
     clearInterval(playbackTimer)
     playbackTimer = null
-    console.log('Playback stopped.')
   }
-  // 如果有淡入淡出动画，也停止
-  if (isFading.value) {
-    clearInterval(fadeTimer)
-    isFading.value = false
-    console.log('Fade animation cancelled due to playback stop.')
-    // 重置所有图层状态
-    layerRefs.value.forEach((instance, index) => {
-      const layer = instance?.cesiumObject
-      if (layer) {
-        layer.show = index === currentIndex.value
-        layer.alpha = index === currentIndex.value ? 1.0 : 0.0
-      }
-    })
-  }
+  clearInterval(fadeTimer)
+  fadeTimer = null
+  isFading.value = false
+
+  // Instantly show current image and hide others
+  imageryLayers.forEach((layer, index) => {
+    if (layer) {
+      const isCurrent = index === currentIndex.value
+      layer.show = isCurrent
+      layer.alpha = isCurrent ? 1.0 : 0.0
+    }
+  })
 }
 
-// 开始播放的函数
+// 开始播放
 const startPlayback = () => {
-  // 检查所有条件是否满足播放要求
-  if (
-    !cesiumReady.value ||
-    !myViewer ||
-    !imagesLoaded.value ||
-    !isPlaying.value ||
-    layerRefs.value.length !== props.images.length
-  ) {
-    console.log('Conditions not met for starting playback.')
+  if (!imagesLoaded.value || !isPlaying.value || props.images.length === 0) {
     return
   }
-  // 先停止旧的播放
+
   stopPlayback()
 
-  if (props.images.length > 0) {
-    // 确保初始图层可见
-    const initialLayerInstance = layerRefs.value[currentIndex.value]
-    const initialLayer = initialLayerInstance?.cesiumObject
-    if (initialLayer) {
-      console.log(
-        `Ensuring initial layer ${currentIndex.value} is visible before starting playback.`
-      )
-      // 设置所有图层状态
-      layerRefs.value.forEach((instance, index) => {
-        const layer = instance?.cesiumObject
-        if (layer) {
-          layer.show = index === currentIndex.value
-          layer.alpha = index === currentIndex.value ? 1.0 : 0.0
-        }
-      })
-    } else {
-      console.warn(`Initial layer instance ${currentIndex.value} not found.`)
-      return
+  // Ensure current image is visible
+  if (imageryLayers.length > 0) {
+    // Reset all layers first
+    imageryLayers.forEach((layer) => {
+      if (layer) {
+        layer.show = false
+        layer.alpha = 0.0
+      }
+    })
+
+    // Show current layer
+    if (imageryLayers[currentIndex.value]) {
+      imageryLayers[currentIndex.value].show = true
+      imageryLayers[currentIndex.value].alpha = 1.0
     }
 
-    // 开始定时器，执行图像切换
-    console.log('Starting playback timer with interval (seconds):', playbackInterval.value)
-    const intervalMs = Math.max(50, playbackInterval.value * 1000)
-    playbackTimer = setInterval(nextImage, intervalMs)
+    // Calculate interval and determine transition behavior
+    const intervalMs = playbackInterval.value * 1000
+    useSmooth = intervalMs < 3000 // Update global transition mode
+
+    if (useSmooth) {
+      // For faster playback, ensure smooth transitions with fade duration padding
+      playbackTimer = setInterval(
+        () => {
+          if (!isFading.value) {
+            nextImage()
+          }
+        },
+        Math.max(fadeDuration + 100, intervalMs)
+      )
+    } else {
+      // For slower playback, allow immediate transitions
+      playbackTimer = setInterval(nextImage, intervalMs)
+    }
   }
 }
 
-// 尝试启动播放的函数，包含条件检查和重试逻辑
-const tryStartPlayback = () => {
-  if (!cesiumReady.value || !isPlaying.value || props.images.length === 0) return
-
-  // 检查图层引用是否准备完成
-  if (layerRefs.value.length !== props.images.length) {
-    console.log('Layer refs not ready yet, waiting...')
-    // 短暂延迟后重试
-    setTimeout(tryStartPlayback, 100)
-    return
-  }
-
-  // 检查图像是否加载完成
-  if (!imagesLoaded.value) {
-    console.log('Images not loaded yet, waiting...')
-    return
-  }
-
-  console.log('All conditions met, starting playback')
-  startPlayback()
-}
-
-// 切换播放/暂停状态的函数
+// 切换播放/暂停状态
 const togglePlayback = () => {
   if (isPreloading.value || !imagesLoaded.value) return
   isPlaying.value = !isPlaying.value
@@ -367,7 +330,7 @@ const togglePlayback = () => {
 // 监听播放状态变化
 watch(isPlaying, (newValue) => {
   if (newValue) {
-    tryStartPlayback()
+    startPlayback()
   } else {
     stopPlayback()
   }
@@ -376,81 +339,64 @@ watch(isPlaying, (newValue) => {
 // 监听播放间隔变化
 watch(playbackInterval, () => {
   if (isPlaying.value) {
-    startPlayback() // 重新启动播放器以应用新间隔
+    startPlayback()
   }
 })
-
-// 监听图像加载状态和图层引用变化
-watch(
-  [imagesLoaded, layerRefs],
-  ([loaded, refs]) => {
-    if (loaded && props.images.length > 0 && refs.length === props.images.length) {
-      console.log('Images loaded and layer refs ready. Setting initial layer state.')
-      // 设置初始图层状态
-      refs.forEach((layerInstance, index) => {
-        const layer = layerInstance?.cesiumObject
-        if (layer) {
-          layer.alpha = index === currentIndex.value ? 1.0 : 0.0
-          layer.show = index === currentIndex.value
-        }
-      })
-      tryStartPlayback()
-    } else if (!loaded) {
-      // 如果图像未加载完成，隐藏所有图层
-      refs.forEach((layerInstance) => {
-        const layer = layerInstance?.cesiumObject
-        if (layer) {
-          layer.show = false
-          layer.alpha = 0.0
-        }
-      })
-    }
-  },
-  { deep: true }
-)
 
 // 监听输入图像数组变化
 watch(
   () => props.images,
-  (newImages) => {
-    console.log('Images prop changed. Clearing refs and stopping playback.')
-    // 重置组件状态
-    if (cesiumReady.value) {
-      stopPlayback()
-    }
-    layerRefs.value = []
+  () => {
+    stopPlayback()
     currentIndex.value = 0
     imagesLoaded.value = false
     isPreloading.value = false
     isFading.value = false
 
-    // 处理新图像数组
-    if (newImages && newImages.length > 0) {
-      preloadImages(newImages)
-    } else {
-      imagesLoaded.value = true
-      isPreloading.value = false
+    if (viewer) {
+      createImageryLayers()
     }
   },
   { deep: true }
 )
 
-// 组件挂载时执行
-onMounted(() => {
-  // 初始加载图像
-  if (props.images && props.images.length > 0) {
-    preloadImages(props.images)
-  } else {
-    imagesLoaded.value = true
-    isPreloading.value = false
+// 组件挂载时初始化
+onMounted(async () => {
+  // 加载 Cesium CSS
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = '/seaice/Cesium/Widgets/widgets.css'
+  document.head.appendChild(link)
+
+  // 动态引入 Cesium
+  const script = document.createElement('script')
+  script.src = '/seaice/Cesium/Cesium.js'
+  script.onload = () => {
+    // 确保Cesium对象可用
+    Cesium = window.Cesium
+    if (Cesium) {
+      initCesium()
+      if (props.images && props.images.length > 0) {
+        preloadImages(props.images)
+      } else {
+        imagesLoaded.value = true
+        isPreloading.value = false
+      }
+    } else {
+      console.error('Failed to load Cesium')
+    }
   }
+  document.head.appendChild(script)
 })
 
 // 组件卸载时清理资源
 onUnmounted(() => {
   stopPlayback()
-  layerRefs.value = []
-  cesiumReady.value = false
+  if (viewer) {
+    viewer.destroy()
+    viewer = null
+  }
+  imageryLayers = []
 })
 </script>
 
@@ -459,6 +405,14 @@ onUnmounted(() => {
   height: 100%;
   width: 100%;
   position: relative;
+}
+
+#cesiumContainer {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .controls {
