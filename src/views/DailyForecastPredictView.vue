@@ -5,7 +5,7 @@
     v-model:selected-date="selectedDate"
     :get-prediction-result="getDayPredictionResult"
     :submit-prediction-request="useDayPrediction"
-    class="full-width predictor-container"
+    class="predictor-container"
   >
     <template #date-picker>
       <el-date-picker
@@ -29,17 +29,15 @@ const selectedDate = ref('')
 </script>
 
 <style scoped>
-.full-width {
-  width: 100%;
-}
-
 .predictor-container {
+  width: 100%;
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .date-picker {
+  width: 100%;
   max-width: 300px;
 }
 </style>
