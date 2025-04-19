@@ -78,7 +78,7 @@
 
         <!-- Footer -->
         <el-footer class="footer">
-          OUC AI GROUP 2024 Copyright by 中国海洋大学人工智能研究院
+          OUC AI GROUP 2025 Copyright by 中国海洋大学人工智能研究院
         </el-footer>
       </el-container>
     </el-container>
