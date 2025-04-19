@@ -2,7 +2,10 @@
   <el-row ref="viewerContainer" class="demo-viewer">
     <div id="cesiumContainer"></div>
     <!-- 控制UI - 包含加载状态、日期显示和播放控制 -->
-    <div class="controls">
+    <div class="controls" ref="controlsRef" @mousedown="startDrag" :style="controlsStyle">
+      <div class="controls-header">
+        <div class="drag-handle">☰</div>
+      </div>
       <div v-if="isPreloading || isFading" class="loading-indicator">
         {{ isPreloading ? '图片加载中...' : isFading ? '切换中...' : '' }}
       </div>
@@ -26,10 +29,63 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, reactive } from 'vue'
 
 /** @type {typeof import('@cesium/engine').Cesium} */
 let Cesium = window.Cesium
+
+// 拖拽相关状态
+const controlsRef = ref(null)
+const isDragging = ref(false)
+const position = reactive({
+  x: 0,
+  y: 0
+})
+const dragOffset = reactive({
+  x: 0,
+  y: 0
+})
+
+// 控制面板样式
+const controlsStyle = computed(() => ({
+  position: 'fixed',
+  left: `${position.x}px`,
+  top: `${position.y}px`,
+  transform: 'none'
+}))
+
+// 拖拽处理方法
+const startDrag = (e) => {
+  if (e.target.classList.contains('drag-handle')) {
+    isDragging.value = true
+    dragOffset.x = e.clientX - position.x
+    dragOffset.y = e.clientY - position.y
+
+    document.addEventListener('mousemove', handleDrag)
+    document.addEventListener('mouseup', stopDrag)
+  }
+}
+
+const handleDrag = (e) => {
+  if (isDragging.value) {
+    position.x = e.clientX - dragOffset.x
+    position.y = e.clientY - dragOffset.y
+  }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleDrag)
+  document.removeEventListener('mouseup', stopDrag)
+}
+
+// 初始化控制面板位置
+onMounted(() => {
+  const viewerWidth = window.innerWidth
+  const viewerHeight = window.innerHeight
+  position.x = (viewerWidth - 300) / 2 // 300是控制面板的最小宽度
+  position.y = viewerHeight - 120 // 距离底部120px
+})
 
 // 组件属性定义
 const props = defineProps({
@@ -416,17 +472,43 @@ onUnmounted(() => {
 }
 
 .controls {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.6);
   padding: 12px;
   border-radius: 8px;
   color: white;
   text-align: center;
-  z-index: 10;
+  z-index: 9999;
   min-width: 300px;
+  pointer-events: auto;
+  user-select: none;
+  cursor: move;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.3s;
+}
+
+.controls:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.controls-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  cursor: move;
+}
+
+.drag-handle {
+  color: #409eff;
+  font-size: 20px;
+  cursor: move;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.drag-handle:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+  transform: scale(1.1);
 }
 
 .loading-indicator {
