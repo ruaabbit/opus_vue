@@ -84,7 +84,7 @@ onMounted(() => {
   const viewerWidth = window.innerWidth
   const viewerHeight = window.innerHeight
   position.x = (viewerWidth - 300) / 2 // 300是控制面板的最小宽度
-  position.y = viewerHeight - 120 // 距离底部120px
+  position.y = viewerHeight - 250 // 距离底部250px
 })
 
 // 组件属性定义
