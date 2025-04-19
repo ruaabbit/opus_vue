@@ -108,7 +108,11 @@ const bottomRightCoord = ref({ x: null, y: null })
 
 const updatePosition = () => {
   if (topLeftCoord.value.x !== null && bottomRightCoord.value.x !== null) {
-    formData.value.position = `${topLeftCoord.value.y},${topLeftCoord.value.x};${bottomRightCoord.value.y},${topLeftCoord.value.x};${topLeftCoord.value.y},${bottomRightCoord.value.x};${bottomRightCoord.value.y},${bottomRightCoord.value.x}`
+    // 由于图片坐标系原点在左上角，y轴向下，需要用448(图片高度)减去y坐标来修正
+    const height = 448 // 图片高度
+    const topY = height - topLeftCoord.value.y
+    const bottomY = height - bottomRightCoord.value.y
+    formData.value.position = `${topY},${topLeftCoord.value.x};${bottomY},${topLeftCoord.value.x};${topY},${bottomRightCoord.value.x};${bottomY},${bottomRightCoord.value.x}`
   } else {
     formData.value.position = ''
   }
