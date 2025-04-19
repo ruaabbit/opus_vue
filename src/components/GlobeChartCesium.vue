@@ -83,8 +83,8 @@ const stopDrag = () => {
 onMounted(() => {
   const viewerWidth = window.innerWidth
   const viewerHeight = window.innerHeight
-  position.x = (viewerWidth - 300) / 2 // 300是控制面板的最小宽度
-  position.y = viewerHeight - 250 // 距离底部250px
+  position.x = (viewerWidth - 100) / 2
+  position.y = viewerHeight - 200 // 距离底部200px
 })
 
 // 组件属性定义
@@ -130,6 +130,7 @@ const initCesium = () => {
     navigationHelpButton: false,
     animation: false,
     timeline: false,
+    fullscreenButton: false,
     creditContainer: document.createElement('div'), // 隐藏版权信息
     terrainProvider: undefined,
     imageryProvider: false

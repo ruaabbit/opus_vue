@@ -226,12 +226,15 @@ const handleSelect = (key) => {
 
 .content-container {
   background-color: white;
-  padding: 1.5rem;
+  padding: 0; /* 移除内边距使router-view可以完全填充 */
   min-height: 360px;
   border-radius: 0.75rem;
   box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.05),
     0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* 确保子元素不会溢出圆角边界 */
+  display: flex; /* 使用flex布局让router-view填充 */
+  flex-direction: column; /* 垂直方向排列 */
 }
 
 /* 页脚 */

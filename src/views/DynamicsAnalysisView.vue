@@ -1,74 +1,72 @@
 <template>
   <div class="container-layout">
-    <div class="main-content">
-      <el-card class="box-card">
-        <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
-          <el-form-item label="开始月份">
-            <el-date-picker
-              v-model="formData.startMonth"
-              type="month"
-              placeholder="选择开始月份"
-              format="YYYY-MM"
-              value-format="YYYYMM"
-            />
-          </el-form-item>
-          <el-form-item label="结束月份">
-            <el-date-picker
-              v-model="formData.endMonth"
-              type="month"
-              placeholder="选择结束月份"
-              format="YYYY-MM"
-              value-format="YYYYMM"
-            />
-          </el-form-item>
+    <el-card class="box-card">
+      <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
+        <el-form-item label="开始月份">
+          <el-date-picker
+            v-model="formData.startMonth"
+            type="month"
+            placeholder="选择开始月份"
+            format="YYYY-MM"
+            value-format="YYYYMM"
+          />
+        </el-form-item>
+        <el-form-item label="结束月份">
+          <el-date-picker
+            v-model="formData.endMonth"
+            type="month"
+            placeholder="选择结束月份"
+            format="YYYY-MM"
+            value-format="YYYYMM"
+          />
+        </el-form-item>
 
-          <el-form-item label="预报提前期">
-            <el-input-number
-              v-model="formData.grad_forecast_month"
-              :min="1"
-              placeholder="请输入提前期（月）"
-            />
-          </el-form-item>
+        <el-form-item label="预报提前期">
+          <el-input-number
+            v-model="formData.grad_forecast_month"
+            :min="1"
+            placeholder="请输入提前期（月）"
+          />
+        </el-form-item>
 
-          <el-form-item label="目标月份">
-            <el-date-picker
-              v-model="formData.grad_month"
-              type="month"
-              placeholder="目标月份由数据范围和预报提前期决定"
-              format="MM"
-              value-format="MM"
-              disabled
-            />
-          </el-form-item>
+        <el-form-item label="目标月份">
+          <el-date-picker
+            v-model="formData.grad_month"
+            type="month"
+            placeholder="目标月份由数据范围和预报提前期决定"
+            format="MM"
+            value-format="MM"
+            disabled
+          />
+        </el-form-item>
 
-          <el-form-item label="分析范围">
-            <ImageSelector v-model:topLeft="topLeftCoord" v-model:bottomRight="bottomRightCoord" />
-          </el-form-item>
+        <el-form-item label="分析范围">
+          <ImageSelector v-model:topLeft="topLeftCoord" v-model:bottomRight="bottomRightCoord" />
+        </el-form-item>
 
-          <el-form-item label="分析目标">
-            <el-radio-group v-model="formData.grad_type">
-              <el-radio value="sum">海冰面积</el-radio>
-              <el-radio value="variation">海冰变化</el-radio>
-            </el-radio-group>
-          </el-form-item>
+        <el-form-item label="分析目标">
+          <el-radio-group v-model="formData.grad_type">
+            <el-radio value="sum">海冰面积</el-radio>
+            <el-radio value="variation">海冰变化</el-radio>
+          </el-radio-group>
+        </el-form-item>
 
-          <el-form-item>
-            <el-button type="primary" :loading="isLoading" @click="submitForm">
-              {{ isLoading ? '分析中...' : '提交分析' }}
-            </el-button>
-          </el-form-item>
-        </el-form>
+        <el-form-item>
+          <el-button type="primary" :loading="isLoading" @click="submitForm">
+            {{ isLoading ? '分析中...' : '提交分析' }}
+          </el-button>
+        </el-form-item>
+      </el-form>
 
-        <div v-if="isLoading" class="loading-container">
-          <LoadingAnimation />
-        </div>
+      <div v-if="isLoading" class="loading-container">
+        <LoadingAnimation />
+      </div>
 
-        <div v-if="!isLoading && isOK" class="result-section">
-          <!-- 使用新的DynamicsAnalysisViewer组件替换ArcticSeaIceViewer -->
-          <DynamicsAnalysisViewer :images="images" class="full-width" />
-        </div>
-      </el-card>
-    </div>
+      <div v-if="!isLoading && isOK" class="result-section">
+        <!-- 使用新的DynamicsAnalysisViewer组件替换ArcticSeaIceViewer -->
+        <DynamicsAnalysisViewer :images="images" class="full-width" />
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -219,17 +217,6 @@ onUnmounted(() => {
 .container-layout {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-/* 移除未使用的sidebar样式或保留但设置宽度为0 */
-.sidebar {
-  display: none; /* 完全隐藏sidebar */
-}
-
-.main-content {
-  width: 100%;
 }
 
 .box-card {
@@ -278,12 +265,5 @@ onUnmounted(() => {
     width: 100%; /* 全宽显示 */
     max-width: none; /* 移除最大宽度限制 */
   }
-
-  /* 以下两个样式可以移除，因为我们已经隐藏了sidebar */
-  /*
-  .sidebar {
-    width: 0;
-  }
-  */
 }
 </style>
