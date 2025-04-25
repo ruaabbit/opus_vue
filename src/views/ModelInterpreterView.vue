@@ -42,26 +42,26 @@
           </el-radio-group>
         </el-form-item>
 
-          <el-form-item label="选定位置">
-            <ImageSelector
-              v-model:topLeft="topLeftCoord"
-              v-model:bottomRight="bottomRightCoord"
-              @update:topLeft="updatePosition"
-              @update:bottomRight="updatePosition"
-              :width="304"
-              :height="448"
-              :imageSrc="'/seaice/picture/arctic_mask.webp'"
-            />
-          </el-form-item>
+        <el-form-item label="选定位置">
+          <ImageSelector
+            v-model:topLeft="topLeftCoord"
+            v-model:bottomRight="bottomRightCoord"
+            @update:topLeft="updatePosition"
+            @update:bottomRight="updatePosition"
+            :width="304"
+            :height="448"
+            :imageSrc="'/seaice/picture/arctic_mask.webp'"
+          />
+        </el-form-item>
 
         <el-form-item label="选定变量">
           <el-radio-group v-model="formData.variable">
-            <el-radio label="1">海冰密集度(SIC)</el-radio>
-            <el-radio label="2">海冰U分量(SI_U)</el-radio>
-            <el-radio label="3">海冰V分量(SI_V)</el-radio>
-            <el-radio label="4">2米温度(T2M)</el-radio>
-            <el-radio label="5">10米U风(U10M)</el-radio>
-            <el-radio label="6">10米V风(V10M)</el-radio>
+            <el-radio value="1">海冰密集度(SIC)</el-radio>
+            <el-radio value="2">海冰U分量(SI_U)</el-radio>
+            <el-radio value="3">海冰V分量(SI_V)</el-radio>
+            <el-radio value="4">2米温度(T2M)</el-radio>
+            <el-radio value="5">10米U风(U10M)</el-radio>
+            <el-radio value="6">10米V风(V10M)</el-radio>
           </el-radio-group>
           <div v-if="formData.variable" style="margin-top: 8px">
             <el-button @click="formData.variable = ''" size="small">取消选择</el-button>
