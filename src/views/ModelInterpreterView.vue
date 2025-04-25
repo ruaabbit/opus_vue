@@ -120,8 +120,14 @@ const isLoading = ref(false)
 const currentTaskId = ref(null)
 const dateError = ref('')
 
-// 禁用不符合条件的结束日期（必须至少比开始日期晚13天）
+// 禁用不符合条件的日期（必须在1979-2023范围内，且结束日期至少比开始日期晚13天）
 const disabledEndDate = (date) => {
+  const minYear = 1979
+  const maxYear = 2023
+  const year = date.getFullYear()
+
+  if (year < minYear || year > maxYear) return true
+
   if (!formData.value.dataRange[0]) return false
 
   const startDate = new Date(
@@ -138,10 +144,28 @@ const validateDateRange = () => {
   const { dataRange } = formData.value
   dateError.value = ''
 
+  if (dataRange[0]) {
+    const startDate = new Date(dataRange[0].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+    const startYear = startDate.getFullYear()
+    
+    if (startYear < 1979 || startYear > 2023) {
+      dateError.value = '开始日期必须在1979-2023范围内'
+      formData.value.dataRange[0] = '' // 清空不合规的开始日期
+      return false
+    }
+  }
+
   if (dataRange[0] && dataRange[1]) {
     const startDate = new Date(dataRange[0].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
     const endDate = new Date(dataRange[1].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
+    const endYear = endDate.getFullYear()
     const daysDiff = Math.floor((endDate - startDate) / (24 * 60 * 60 * 1000))
+
+    if (endYear < 1979 || endYear > 2023) {
+      dateError.value = '结束日期必须在1979-2023范围内'
+      formData.value.dataRange[1] = '' // 清空不合规的结束日期
+      return false
+    }
 
     if (daysDiff < 13) {
       dateError.value = '结束日期至少需要比开始日期晚13天'
