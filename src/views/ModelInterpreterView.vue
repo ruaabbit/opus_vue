@@ -1,47 +1,46 @@
 <template>
   <div class="container-layout">
-    <div class="main-content">
-      <el-card class="box-card">
-        <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
-          <el-form-item label="数据范围" required>
-            <el-date-picker
-              v-model="formData.dataRange[0]"
-              type="date"
-              placeholder="选择开始日期"
-              format="YYYY-MM-DD"
-              value-format="YYYYMMDD"
-              @change="validateDateRange"
-            />
-            <span style="margin: 0 8px">至</span>
-            <el-date-picker
-              v-model="formData.dataRange[1]"
-              type="date"
-              placeholder="选择结束日期"
-              format="YYYY-MM-DD"
-              value-format="YYYYMMDD"
-              :disabled-date="disabledEndDate"
-              @change="validateDateRange"
-            />
-            <div v-if="dateError" class="date-error-tip">
-              <span style="color: #f56c6c; font-size: 12px">{{ dateError }}</span>
-            </div>
-          </el-form-item>
+    <el-card class="box-card">
+      <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
+        <el-form-item label="数据范围" required>
+          <el-date-picker
+            v-model="formData.dataRange[0]"
+            type="date"
+            placeholder="选择开始日期"
+            format="YYYY-MM-DD"
+            value-format="YYYYMMDD"
+            @change="validateDateRange"
+          />
+          <span style="margin: 0 8px">至</span>
+          <el-date-picker
+            v-model="formData.dataRange[1]"
+            type="date"
+            placeholder="选择结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYYMMDD"
+            :disabled-date="disabledEndDate"
+            @change="validateDateRange"
+          />
+          <div v-if="dateError" class="date-error-tip">
+            <span style="color: #f56c6c; font-size: 12px">{{ dateError }}</span>
+          </div>
+        </el-form-item>
 
-          <el-form-item label="预测间隔(天)" required>
-            <el-input-number
-              v-model="formData.pred_gap"
-              :min="1"
-              :max="7"
-              placeholder="预测间隔天数"
-            />
-          </el-form-item>
+        <el-form-item label="预测间隔(天)" required>
+          <el-input-number
+            v-model="formData.pred_gap"
+            :min="1"
+            :max="7"
+            placeholder="预测间隔天数"
+          />
+        </el-form-item>
 
-          <el-form-item label="分析目标" required>
-            <el-radio-group v-model="formData.grad_type">
-              <el-radio value="sum">均值</el-radio>
-              <el-radio value="l2">分布</el-radio>
-            </el-radio-group>
-          </el-form-item>
+        <el-form-item label="分析目标" required>
+          <el-radio-group v-model="formData.grad_type">
+            <el-radio value="sum">均值</el-radio>
+            <el-radio value="l2">分布</el-radio>
+          </el-radio-group>
+        </el-form-item>
 
           <el-form-item label="选定位置">
             <ImageSelector
@@ -55,36 +54,35 @@
             />
           </el-form-item>
 
-          <el-form-item label="选定变量">
-            <el-radio-group v-model="formData.variable">
-              <el-radio label="1">海冰密集度(SIC)</el-radio>
-              <el-radio label="2">海冰U分量(SI_U)</el-radio>
-              <el-radio label="3">海冰V分量(SI_V)</el-radio>
-              <el-radio label="4">2米温度(T2M)</el-radio>
-              <el-radio label="5">10米U风(U10M)</el-radio>
-              <el-radio label="6">10米V风(V10M)</el-radio>
-            </el-radio-group>
-            <div v-if="formData.variable" style="margin-top: 8px">
-              <el-button @click="formData.variable = ''" size="small">取消选择</el-button>
-            </div>
-          </el-form-item>
+        <el-form-item label="选定变量">
+          <el-radio-group v-model="formData.variable">
+            <el-radio label="1">海冰密集度(SIC)</el-radio>
+            <el-radio label="2">海冰U分量(SI_U)</el-radio>
+            <el-radio label="3">海冰V分量(SI_V)</el-radio>
+            <el-radio label="4">2米温度(T2M)</el-radio>
+            <el-radio label="5">10米U风(U10M)</el-radio>
+            <el-radio label="6">10米V风(V10M)</el-radio>
+          </el-radio-group>
+          <div v-if="formData.variable" style="margin-top: 8px">
+            <el-button @click="formData.variable = ''" size="small">取消选择</el-button>
+          </div>
+        </el-form-item>
 
-          <el-form-item>
-            <el-button type="primary" :loading="isLoading" @click="submitForm">
-              {{ isLoading ? '分析中...' : '提交分析' }}
-            </el-button>
-          </el-form-item>
-        </el-form>
+        <el-form-item>
+          <el-button type="primary" :loading="isLoading" @click="submitForm">
+            {{ isLoading ? '分析中...' : '提交分析' }}
+          </el-button>
+        </el-form-item>
+      </el-form>
 
-        <div v-if="isLoading" class="loading-container">
-          <LoadingAnimation />
-        </div>
+      <div v-if="isLoading" class="loading-container">
+        <LoadingAnimation />
+      </div>
 
-        <div v-if="!isLoading && isOK" class="result-section">
-          <ModelInterpreterViewer :images="images" class="full-width" />
-        </div>
-      </el-card>
-    </div>
+      <div v-if="!isLoading && isOK" class="result-section">
+        <ModelInterpreterViewer :images="images" class="full-width" />
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -109,7 +107,11 @@ const bottomRightCoord = ref({ x: null, y: null })
 
 const updatePosition = () => {
   if (topLeftCoord.value.x !== null && bottomRightCoord.value.x !== null) {
-    formData.value.position = `${topLeftCoord.value.y},${topLeftCoord.value.x};${bottomRightCoord.value.y},${topLeftCoord.value.x};${topLeftCoord.value.y},${bottomRightCoord.value.x};${bottomRightCoord.value.y},${bottomRightCoord.value.x}`
+    // 由于图片坐标系原点在左上角，y轴向下，需要用448(图片高度)减去y坐标来修正
+    const height = 448 // 图片高度
+    const topY = height - topLeftCoord.value.y
+    const bottomY = height - bottomRightCoord.value.y
+    formData.value.position = `${topY},${topLeftCoord.value.x};${bottomY},${topLeftCoord.value.x};${topY},${bottomRightCoord.value.x};${bottomY},${bottomRightCoord.value.x}`
   } else {
     formData.value.position = ''
   }
@@ -278,17 +280,6 @@ onUnmounted(() => {
 .container-layout {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-/* 移除未使用的sidebar样式或保留但设置宽度为0 */
-.sidebar {
-  display: none; /* 完全隐藏sidebar */
-}
-
-.main-content {
-  width: 100%;
 }
 
 .box-card {
@@ -335,11 +326,6 @@ onUnmounted(() => {
 @media (min-width: 768px) {
   .container-layout {
     flex-direction: row;
-  }
-
-  .main-content {
-    width: 100%; /* 全宽显示 */
-    max-width: none; /* 移除最大宽度限制 */
   }
 }
 </style>

@@ -32,6 +32,8 @@ const selectedDate = ref('')
 .predictor-container {
   width: 100%;
   max-width: 800px;
+  margin-top: 10%;
+  margin-bottom: 10%;
   margin-left: auto;
   margin-right: auto;
 }

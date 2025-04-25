@@ -1,16 +1,10 @@
 <template>
-  <div class="main-container">
-    <div class="content-wrapper">
-      <div class="viewer-container">
-        <div v-if="isLoading">
-          <!-- 显示加载动画 -->
-          <LoadingAnimation />
-        </div>
-        <div v-else class="globe-wrapper">
-          <!-- <GlobeChartEchartsGL class="globe-chart" :images="images" /> -->
-          <GlobeChartCesium class="globe-chart" :images="images" />
-        </div>
-      </div>
+  <div class="globe-container">
+    <div v-if="isLoading">
+      <LoadingAnimation />
+    </div>
+    <div v-else>
+      <GlobeChartCesium :images="images" />
     </div>
   </div>
 </template>
@@ -19,7 +13,6 @@
 import { ref, onMounted } from 'vue'
 import { useRealtimeMonthPrediction } from '@/common/api'
 import LoadingAnimation from '../components/LoadingAnimation.vue'
-// import GlobeChartEchartsGL from '../components/GlobeChartEchartsGL.vue'
 import GlobeChartCesium from '../components/GlobeChartCesium.vue'
 
 const images = ref([])
@@ -40,38 +33,22 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.main-container {
-  margin: 0 auto;
-  display: flex;
-  max-height: 100vh;
-}
-
-.content-wrapper {
+.globe-container {
+  width: 100%;
+  height: 75vh; /* 使用视口高度而不是相对高度 */
+  position: relative;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  width: 100%;
 }
 
-.viewer-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 80vh;
-}
-
-.globe-wrapper {
-  position: relative;
-  width: 80vw;
-  height: 80vh;
-}
-
-.globe-chart {
-  width: 100%;
+.globe-container > div {
+  flex: 1; /* 让子元素填充剩余空间 */
   height: 100%;
 }
 
+/* 保留其他控制组件的样式 */
 .controls {
   position: absolute;
   bottom: 20px;
@@ -82,6 +59,7 @@ onMounted(async () => {
   border-radius: 8px;
   color: white;
   text-align: center;
+  z-index: 10;
 }
 
 .date-display {
