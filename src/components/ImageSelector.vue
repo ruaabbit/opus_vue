@@ -8,7 +8,7 @@
       @mouseup="endSelection"
       @mouseleave="endSelection"
     >
-      <img src="/picture/land_image.webp" alt="Selectable Image" draggable="false" />
+      <img :src="imageSrc" alt="Selectable Image" draggable="false" />
       <div
         v-if="isSelecting"
         class="selection"
@@ -75,6 +75,11 @@ const props = defineProps({
   height: {
     type: Number,
     default: 432
+  },
+  imageSrc: {
+    type: String,
+    required: true,
+    default: '/seaice/picture/land_image.webp'
   }
 })
 

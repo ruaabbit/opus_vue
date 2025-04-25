@@ -51,6 +51,7 @@
               @update:bottomRight="updatePosition"
               :width="304"
               :height="448"
+              :imageSrc="'/seaice/picture/arctic_mask.webp'"
             />
           </el-form-item>
 
@@ -147,7 +148,7 @@ const validateDateRange = () => {
   if (dataRange[0]) {
     const startDate = new Date(dataRange[0].replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'))
     const startYear = startDate.getFullYear()
-    
+
     if (startYear < 1979 || startYear > 2023) {
       dateError.value = '开始日期必须在1979-2023范围内'
       formData.value.dataRange[0] = '' // 清空不合规的开始日期
