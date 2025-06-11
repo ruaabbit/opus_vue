@@ -5,7 +5,8 @@ export default {
     subtitle:
       'MetaICE: Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting',
     aboutUs: 'About Us',
-    copyright: 'OUC AI GROUP 2025 Copyright by Ocean University of China AI Group'
+    copyright:
+      'OUC AI GROUP 2025 Copyright by Institute of Artificial Intelligence, Ocean University of China'
   },
 
   // Menu items
