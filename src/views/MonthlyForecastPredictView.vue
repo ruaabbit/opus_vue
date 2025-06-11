@@ -11,7 +11,7 @@
       <el-date-picker
         v-model="selectedDate"
         type="month"
-        placeholder="请选择月份"
+        :placeholder="$t('date.selectDate')"
         format="YYYY/MM/DD"
         value-format="YYYY/MM/DD"
         class="date-picker"

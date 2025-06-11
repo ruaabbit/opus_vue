@@ -2,20 +2,20 @@
   <div class="container-layout">
     <el-card class="box-card">
       <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
-        <el-form-item label="数据范围" required>
+        <el-form-item :label="$t('modelInterpreter.dataRange')" required>
           <el-date-picker
             v-model="formData.dataRange[0]"
             type="date"
-            placeholder="选择开始日期"
+            :placeholder="$t('modelInterpreter.selectStartDate')"
             format="YYYY-MM-DD"
             value-format="YYYYMMDD"
             @change="validateDateRange"
           />
-          <span style="margin: 0 8px">至</span>
+          <span style="margin: 0 8px">{{ $t('modelInterpreter.to') }}</span>
           <el-date-picker
             v-model="formData.dataRange[1]"
             type="date"
-            placeholder="选择结束日期"
+            :placeholder="$t('modelInterpreter.selectEndDate')"
             format="YYYY-MM-DD"
             value-format="YYYYMMDD"
             :disabled-date="disabledEndDate"
@@ -26,23 +26,23 @@
           </div>
         </el-form-item>
 
-        <el-form-item label="预测间隔(天)" required>
+        <el-form-item :label="$t('modelInterpreter.predictionInterval')" required>
           <el-input-number
             v-model="formData.pred_gap"
             :min="1"
             :max="7"
-            placeholder="预测间隔天数"
+            :placeholder="$t('modelInterpreter.predictionIntervalPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="分析目标" required>
+        <el-form-item :label="$t('modelInterpreter.analysisTarget')" required>
           <el-radio-group v-model="formData.grad_type">
-            <el-radio value="sum">均值</el-radio>
-            <el-radio value="l2">分布</el-radio>
+            <el-radio value="sum">{{ $t('modelInterpreter.mean') }}</el-radio>
+            <el-radio value="l2">{{ $t('modelInterpreter.distribution') }}</el-radio>
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="选定位置">
+        <el-form-item :label="$t('modelInterpreter.selectedPosition')">
           <ImageSelector
             v-model:topLeft="topLeftCoord"
             v-model:bottomRight="bottomRightCoord"
@@ -54,23 +54,23 @@
           />
         </el-form-item>
 
-        <el-form-item label="选定变量">
+        <el-form-item :label="$t('modelInterpreter.selectedVariable')">
           <el-radio-group v-model="formData.variable">
-            <el-radio value="1">海冰密集度(SIC)</el-radio>
-            <el-radio value="2">海冰U分量(SI_U)</el-radio>
-            <el-radio value="3">海冰V分量(SI_V)</el-radio>
-            <el-radio value="4">2米温度(T2M)</el-radio>
-            <el-radio value="5">10米U风(U10M)</el-radio>
-            <el-radio value="6">10米V风(V10M)</el-radio>
+            <el-radio value="1">{{ $t('modelInterpreter.seaIceConcentration') }}</el-radio>
+            <el-radio value="2">{{ $t('modelInterpreter.seaIceUComponent') }}</el-radio>
+            <el-radio value="3">{{ $t('modelInterpreter.seaIceVComponent') }}</el-radio>
+            <el-radio value="4">{{ $t('modelInterpreter.temperature2m') }}</el-radio>
+            <el-radio value="5">{{ $t('modelInterpreter.wind10mU') }}</el-radio>
+            <el-radio value="6">{{ $t('modelInterpreter.wind10mV') }}</el-radio>
           </el-radio-group>
           <div v-if="formData.variable" style="margin-top: 8px">
-            <el-button @click="formData.variable = ''" size="small">取消选择</el-button>
+            <el-button @click="formData.variable = ''" size="small">{{ $t('modelInterpreter.cancelSelection') }}</el-button>
           </div>
         </el-form-item>
 
         <el-form-item>
           <el-button type="primary" :loading="isLoading" @click="submitForm">
-            {{ isLoading ? '分析中...' : '提交分析' }}
+            {{ isLoading ? $t('modelInterpreter.analyzing') : $t('modelInterpreter.submitAnalysis') }}
           </el-button>
         </el-form-item>
       </el-form>
@@ -88,11 +88,14 @@
 
 <script setup>
 import { ref, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useModelInterpreter, getModelInterpreter } from '@/common/api'
 import ModelInterpreterViewer from '@/components/ModelInterpreterViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
 import ImageSelector from '@/components/ImageSelector.vue'
+
+const { t } = useI18n()
 
 const formData = ref({
   dataRange: [], // [start_time, end_time]
@@ -152,7 +155,7 @@ const validateDateRange = () => {
     const startYear = startDate.getFullYear()
 
     if (startYear < 1979 || startYear > 2023) {
-      dateError.value = '开始日期必须在1979-2023范围内'
+      dateError.value = t('modelInterpreter.startDateRange')
       formData.value.dataRange[0] = '' // 清空不合规的开始日期
       return false
     }
@@ -165,13 +168,13 @@ const validateDateRange = () => {
     const daysDiff = Math.floor((endDate - startDate) / (24 * 60 * 60 * 1000))
 
     if (endYear < 1979 || endYear > 2023) {
-      dateError.value = '结束日期必须在1979-2023范围内'
+      dateError.value = t('modelInterpreter.endDateRange')
       formData.value.dataRange[1] = '' // 清空不合规的结束日期
       return false
     }
 
     if (daysDiff < 13) {
-      dateError.value = '结束日期至少需要比开始日期晚13天'
+      dateError.value = t('modelInterpreter.minimumDays')
       formData.value.dataRange[1] = '' // 清空不合规的结束日期
       return false
     }
@@ -192,24 +195,24 @@ const pollAnalysisResult = async () => {
       if (response.data && response.data.images) {
         images.value = response.data.images
         isOK.value = true
-        ElMessage.success(response.message || '分析完成')
+        ElMessage.success(response.message || t('modelInterpreter.analysisComplete'))
         isLoading.value = false
         currentTaskId.value = null
       } else {
-        throw new Error('返回数据格式不正确')
+        throw new Error(t('modelInterpreter.dataFormatError'))
       }
     } else if (response.status === 'IN_PROGRESS') {
       // 任务仍在进行中，继续轮询
       console.log('任务处理中，继续轮询...')
     } else if (response.status === 'FAILED') {
       // 任务失败
-      throw new Error(response.message || '任务处理失败')
+      throw new Error(response.message || t('modelInterpreter.taskFailed'))
     }
   } catch (error) {
     console.error('轮询分析结果出错:', error)
     isLoading.value = false
     isOK.value = false
-    ElMessage.error(error.message || '获取分析结果失败')
+    ElMessage.error(error.message || t('modelInterpreter.getResultsFailed'))
   }
 }
 
@@ -221,13 +224,13 @@ const submitForm = async () => {
     !formData.value.pred_gap ||
     !formData.value.grad_type
   ) {
-    ElMessage.error('请填写必填的分析参数')
+    ElMessage.error(t('modelInterpreter.fillRequiredParams'))
     return
   }
 
   // 提交前再次验证日期范围
   if (!validateDateRange()) {
-    ElMessage.error(dateError.value || '日期范围不符合要求')
+    ElMessage.error(dateError.value || t('modelInterpreter.dateRangeError'))
     return
   }
 
@@ -245,7 +248,7 @@ const submitForm = async () => {
     )
     if (!res.success) {
       isLoading.value = false
-      ElMessage.error(res.message || '提交分析请求失败')
+      ElMessage.error(res.message || t('modelInterpreter.submitRequestFailed'))
       return
     } else {
       currentTaskId.value = res.data.task_id
@@ -260,7 +263,7 @@ const submitForm = async () => {
   } catch (error) {
     isOK.value = false
     isLoading.value = false
-    ElMessage.error('提交分析请求失败，请重试')
+    ElMessage.error(t('modelInterpreter.submitRequestFailedRetry'))
     console.error('Analysis error:', error)
   }
 }

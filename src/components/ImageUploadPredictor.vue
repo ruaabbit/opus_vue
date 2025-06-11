@@ -5,17 +5,17 @@
       <el-icon>
         <ArrowLeft />
       </el-icon>
-      返回
+      {{ $t('imageUpload.back') }}
     </el-button>
 
     <!-- 表单内容 -->
     <div v-if="!showResults" class="form-content">
       <!-- 上传提示 -->
       <div class="upload-header">
-        <h3>图片上传</h3>
+        <h3>{{ $t('imageUpload.title') }}</h3>
         <div class="upload-progress">
           <div class="progress-text">
-            <span>已上传: </span>
+            <span>{{ $t('imageUpload.uploaded') }}: </span>
             <span :class="{ complete: uploadedCount === props.imageLimit }">
               {{ uploadedCount }}/{{ props.imageLimit }}
             </span>
@@ -27,13 +27,13 @@
             :status="uploadedCount === props.imageLimit ? 'success' : ''"
           />
         </div>
-        <p class="hint-text">请上传{{ props.imageLimit }}张PNG格式图片</p>
+        <p class="hint-text">{{ $t('imageUpload.uploadHint', { count: props.imageLimit }) }}</p>
       </div>
 
       <!-- 日期选择器插槽 -->
       <div class="date-picker-section">
         <slot name="date-picker"></slot>
-        <p class="date-hint">选择的日期将作为第一张图片的日期</p>
+        <p class="date-hint">{{ $t('imageUpload.dateHint') }}</p>
       </div>
 
       <!-- 图片上传区域 -->
@@ -58,14 +58,14 @@
               <el-icon class="upload-icon">
                 <Plus />
               </el-icon>
-              <div class="upload-text">点击上传</div>
-              <div class="upload-hint">仅支持PNG格式</div>
+              <div class="upload-text">{{ $t('imageUpload.clickUpload') }}</div>
+              <div class="upload-hint">{{ $t('imageUpload.onlyPNG') }}</div>
             </div>
             <div v-else class="upload-complete">
               <el-icon class="complete-icon">
                 <Check />
               </el-icon>
-              <div class="complete-text">上传完成</div>
+              <div class="complete-text">{{ $t('imageUpload.uploadComplete') }}</div>
             </div>
           </template>
 
@@ -107,7 +107,7 @@
           <el-icon v-if="!isLoading">
             <DataAnalysis />
           </el-icon>
-          <span>{{ isLoading ? '分析中...' : '提交分析' }}</span>
+          <span>{{ isLoading ? $t('imageUpload.analyzing') : $t('imageUpload.submitAnalysis') }}</span>
         </el-button>
       </div>
     </div>
@@ -115,7 +115,7 @@
     <!-- 加载动画 -->
     <div v-if="isLoading" class="loading-container">
       <LoadingAnimation />
-      <p class="loading-text">正在分析您的图片，请稍候...</p>
+      <p class="loading-text">{{ $t('imageUpload.analyzingImages') }}</p>
     </div>
 
     <!-- 预测结果展示 -->
@@ -124,13 +124,13 @@
         <ArcticSeaIceViewer :images="images" />
       </div>
       <div v-else class="empty-results">
-        <el-empty description="暂无预测结果" />
-        <p>请上传图片并选择日期以查看预测结果</p>
+        <el-empty :description="$t('imageUpload.noResults')" />
+        <p>{{ $t('imageUpload.uploadToViewResults') }}</p>
       </div>
     </div>
 
     <!-- 图片预览对话框 -->
-    <el-dialog v-model="dialogVisible" title="图片预览" width="50%" center destroy-on-close>
+    <el-dialog v-model="dialogVisible" :title="$t('imageUpload.imagePreview')" width="50%" center destroy-on-close>
       <div class="preview-container">
         <img class="preview-image" :src="dialogImageUrl" alt="Preview Image" />
       </div>
@@ -140,10 +140,13 @@
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Plus, ZoomIn, Delete, Check, ArrowLeft, DataAnalysis } from '@element-plus/icons-vue'
 import ArcticSeaIceViewer from '@/components/ArcticSeaIceViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
 import { ElMessage } from 'element-plus'
+
+const { t } = useI18n()
 
 const props = defineProps({
   timeMode: {
@@ -233,7 +236,7 @@ const formatDate = (date) => {
 // 获取指定索引图片的日期
 const getImageDate = (index) => {
   if (!imageDates.value.length || index >= imageDates.value.length) {
-    return '未设置日期'
+    return t('imageUpload.noDate')
   }
   return imageDates.value[index]
 }
@@ -241,7 +244,7 @@ const getImageDate = (index) => {
 // 监听文件列表变化
 watch(fileList, (newFiles) => {
   if (newFiles.length === props.imageLimit) {
-    ElMessage.success(`已成功选择${props.imageLimit}张图片`)
+    ElMessage.success(t('imageUpload.selectedImages', { count: props.imageLimit }))
   }
 })
 
@@ -259,12 +262,12 @@ const convertToBase64 = (file) => {
 const validateBeforeUpload = (file) => {
   const isPNG = file.type === 'image/png'
   if (!isPNG) {
-    ElMessage.error('仅支持PNG文件')
+    ElMessage.error(t('imageUpload.onlyPNGSupported'))
     return false
   }
 
   if (fileList.value.length >= props.imageLimit) {
-    ElMessage.error(`已达到${props.imageLimit}张图片上限`)
+    ElMessage.error(t('imageUpload.limitReached', { count: props.imageLimit }))
     return false
   }
 
@@ -285,12 +288,12 @@ const handleUploadSuccess = (response, uploadFile) => {
       uploadedPaths.value[index] = imagePath
     }
   }
-  ElMessage.success(`${uploadFile.name} 上传成功`)
+  ElMessage.success(`${uploadFile.name} ${t('imageUpload.uploadSuccess')}`)
 }
 
 // 处理文件上传失败
 const handleUploadError = (error, uploadFile) => {
-  ElMessage.error(`${uploadFile.name} 上传失败`)
+  ElMessage.error(`${uploadFile.name} ${t('imageUpload.uploadFailed')}`)
   console.error('Upload error:', error)
 }
 
@@ -314,7 +317,7 @@ const handleRemove = (uploadFile) => {
       uploadedPaths.value.push(null)
     }
   }
-  ElMessage.warning(`还需上传${props.imageLimit - fileList.value.length}张图片`)
+  ElMessage.warning(t('imageUpload.needMoreImages', { count: props.imageLimit - fileList.value.length }))
 }
 
 // 轮询获取预测结果
@@ -329,7 +332,7 @@ const pollPredictionResult = async () => {
       showResults.value = true
       clearInterval(pollingInterval.value)
       isLoading.value = false
-      ElMessage.success(response.message || '获取预测结果成功')
+      ElMessage.success(response.message || t('imageUpload.getPredictionSuccess'))
     } else if (response.success === false) {
       console.log('Task not completed yet:', response.message)
     }
@@ -340,7 +343,7 @@ const pollPredictionResult = async () => {
     }
     clearInterval(pollingInterval.value)
     isLoading.value = false
-    ElMessage.error('获取预测结果失败')
+    ElMessage.error(t('imageUpload.getPredictionFailed'))
     console.error('Error:', error)
   }
 }
@@ -361,18 +364,18 @@ const submitPrediction = async () => {
         if (attempts > maxAttempts) {
           clearInterval(pollingInterval.value)
           isLoading.value = false
-          ElMessage.warning('请求超时，请稍后查看结果')
+          ElMessage.warning(t('imageUpload.requestTimeout'))
           return
         }
         pollPredictionResult()
       }, 2000)
     } else {
       isLoading.value = false
-      ElMessage.error(response.message || '提交预测请求失败')
+      ElMessage.error(response.message || t('imageUpload.submitRequestFailed'))
     }
   } catch (error) {
     isLoading.value = false
-    ElMessage.error('提交预测请求失败')
+    ElMessage.error(t('imageUpload.submitRequestFailed'))
     console.error('Error:', error)
   }
 }

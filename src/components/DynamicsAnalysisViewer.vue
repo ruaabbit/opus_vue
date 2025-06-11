@@ -1,7 +1,7 @@
 <template>
   <div class="dynamics-viewer">
     <!-- 标题区域 -->
-    <h2 class="section-title">动力学分析结果热图</h2>
+    <h2 class="section-title">{{ $t('dynamicsAnalysisViewer.title') }}</h2>
 
     <!-- 图片网格容器 -->
     <div class="image-grid" :style="{ '--images-per-row': imagesPerRow }">
@@ -12,7 +12,7 @@
           </div>
           <img
             :src="getImageUrl(image.path)"
-            :alt="`${image.date} - 动力学分析结果`"
+            :alt="$t('dynamicsAnalysisViewer.imageAlt', { date: image.date })"
             class="analysis-image"
             @click="viewImage(image)"
             @load="handleImageLoaded(index)"
@@ -24,7 +24,7 @@
 
     <!-- 空状态显示 -->
     <div v-if="!images || images.length === 0" class="empty-state">
-      <el-empty description="暂无分析结果" />
+      <el-empty :description="$t('dynamicsAnalysisViewer.noResults')" />
     </div>
 
     <!-- 放大查看模态框 -->
@@ -35,7 +35,11 @@
       @click.self="selectedImage = null"
     >
       <div class="modal-content" :style="{ transform: `scale(${scale})` }">
-        <img :src="getImageUrl(selectedImage.path)" alt="放大查看" class="modal-image" />
+        <img
+          :src="getImageUrl(selectedImage.path)"
+          :alt="$t('dynamicsAnalysisViewer.modalImageAlt')"
+          class="modal-image"
+        />
         <p class="image-date">
           {{ selectedImage.date }}
         </p>

@@ -2,58 +2,60 @@
   <div class="container-layout">
     <el-card class="box-card">
       <el-form :model="formData" @submit.prevent="submitForm" class="analysis-form">
-        <el-form-item label="开始月份">
+        <el-form-item :label="$t('dynamicsAnalysis.startMonth')">
           <el-date-picker
             v-model="formData.startMonth"
             type="month"
-            placeholder="选择开始月份"
+            :placeholder="$t('dynamicsAnalysis.selectStartMonth')"
             format="YYYY-MM"
             value-format="YYYYMM"
           />
         </el-form-item>
-        <el-form-item label="结束月份">
+        <el-form-item :label="$t('dynamicsAnalysis.endMonth')">
           <el-date-picker
             v-model="formData.endMonth"
             type="month"
-            placeholder="选择结束月份"
+            :placeholder="$t('dynamicsAnalysis.selectEndMonth')"
             format="YYYY-MM"
             value-format="YYYYMM"
           />
         </el-form-item>
 
-        <el-form-item label="预报提前期">
+        <el-form-item :label="$t('dynamicsAnalysis.forecastPeriod')">
           <el-input-number
             v-model="formData.grad_forecast_month"
             :min="1"
-            placeholder="请输入提前期（月）"
+            :placeholder="$t('dynamicsAnalysis.forecastPeriodPlaceholder')"
           />
         </el-form-item>
 
-        <el-form-item label="目标月份">
+        <el-form-item :label="$t('dynamicsAnalysis.targetMonth')">
           <el-date-picker
             v-model="formData.grad_month"
             type="month"
-            placeholder="目标月份由数据范围和预报提前期决定"
+            :placeholder="$t('dynamicsAnalysis.targetMonthPlaceholder')"
             format="MM"
             value-format="MM"
             disabled
           />
         </el-form-item>
 
-        <el-form-item label="分析范围">
+        <el-form-item :label="$t('dynamicsAnalysis.analysisRange')">
           <ImageSelector v-model:topLeft="topLeftCoord" v-model:bottomRight="bottomRightCoord" />
         </el-form-item>
 
-        <el-form-item label="分析目标">
+        <el-form-item :label="$t('dynamicsAnalysis.analysisTarget')">
           <el-radio-group v-model="formData.grad_type">
-            <el-radio value="sum">海冰面积</el-radio>
-            <el-radio value="variation">海冰变化</el-radio>
+            <el-radio value="sum">{{ $t('dynamicsAnalysis.seaIceArea') }}</el-radio>
+            <el-radio value="variation">{{ $t('dynamicsAnalysis.seaIceVariation') }}</el-radio>
           </el-radio-group>
         </el-form-item>
 
         <el-form-item>
           <el-button type="primary" :loading="isLoading" @click="submitForm">
-            {{ isLoading ? '分析中...' : '提交分析' }}
+            {{
+              isLoading ? $t('dynamicsAnalysis.analyzing') : $t('dynamicsAnalysis.submitAnalysis')
+            }}
           </el-button>
         </el-form-item>
       </el-form>
@@ -72,11 +74,14 @@
 
 <script setup>
 import { ref, watch, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useDynamicsAnalysis, getDynamicsAnalysisResult } from '@/common/api'
 import DynamicsAnalysisViewer from '@/components/DynamicsAnalysisViewer.vue'
 import LoadingAnimation from '@/components/LoadingAnimation.vue'
 import ImageSelector from '@/components/ImageSelector.vue'
+
+const { t } = useI18n()
 
 const formData = ref({
   startMonth: '',
@@ -134,7 +139,7 @@ const pollAnalysisResult = async () => {
     if (result.success && result.status === 'COMPLETED') {
       images.value = result.data.images
       isOK.value = true
-      ElMessage.success(result.message || '分析完成')
+      ElMessage.success(result.message || t('dynamicsAnalysis.analysisComplete'))
       isLoading.value = false
       currentTaskId.value = null
     } else if (result.status === 'IN_PROGRESS') {
@@ -143,14 +148,14 @@ const pollAnalysisResult = async () => {
       console.error('分析任务失败:', result.message)
       isLoading.value = false
       isOK.value = false
-      ElMessage.error(result.message || '分析任务失败')
+      ElMessage.error(result.message || t('dynamicsAnalysis.taskFailed'))
       currentTaskId.value = null
     }
   } catch (error) {
     console.error('轮询分析结果出错:', error)
     isLoading.value = false
     isOK.value = false
-    ElMessage.error('获取分析结果失败')
+    ElMessage.error(t('dynamicsAnalysis.getResultsFailed'))
     currentTaskId.value = null
   }
 }
@@ -162,7 +167,7 @@ const submitForm = async () => {
     !formData.value.grad_month ||
     !formData.value.grad_forecast_month
   ) {
-    ElMessage.error('请填写完整的分析参数')
+    ElMessage.error(t('dynamicsAnalysis.fillCompleteParams'))
     return
   }
 
@@ -182,7 +187,7 @@ const submitForm = async () => {
     )
     if (!res.success) {
       isLoading.value = false
-      ElMessage.error(res.message || '提交分析请求失败')
+      ElMessage.error(res.message || t('dynamicsAnalysis.submitRequestFailed'))
       return
     } else {
       currentTaskId.value = res.data.task_id
@@ -197,7 +202,7 @@ const submitForm = async () => {
   } catch (error) {
     isOK.value = false
     isLoading.value = false
-    ElMessage.error('提交分析请求失败，请重试')
+    ElMessage.error(t('dynamicsAnalysis.submitRequestFailedRetry'))
     console.error('Analysis error:', error)
   }
 }

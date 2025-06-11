@@ -1,7 +1,7 @@
 <template>
   <div class="dynamics-viewer">
     <div class="viewer-header">
-      <h2 class="section-title">逐日模型可解释性分析结果热图</h2>
+      <h2 class="section-title">{{ $t('modelInterpreterViewer.title') }}</h2>
       <div class="viewer-controls" v-if="props.images && props.images.length > 0"></div>
     </div>
 
@@ -15,7 +15,7 @@
       >
         <img
           :src="getImageUrl(image)"
-          :alt="`可解释性分析结果 ${index + 1}`"
+          :alt="$t('modelInterpreterViewer.imageAlt', { index: index + 1 })"
           class="analysis-image"
           :style="{ transform: 'scale(1)' }"
           @click="viewImage(getImageUrl(image))"
@@ -27,7 +27,7 @@
 
     <!-- 空状态显示 -->
     <div v-else class="empty-state">
-      <el-empty description="暂无分析结果" />
+      <el-empty :description="$t('modelInterpreterViewer.noResults')" />
     </div>
 
     <!-- 放大查看模态框 -->
@@ -38,7 +38,11 @@
       @click.self="selectedImage = null"
     >
       <div class="modal-content" :style="{ transform: `scale(${scale})` }">
-        <img :src="getImageUrl(selectedImage)" alt="放大查看" class="modal-image" />
+        <img
+          :src="getImageUrl(selectedImage)"
+          :alt="$t('modelInterpreterViewer.modalImageAlt')"
+          class="modal-image"
+        />
       </div>
       <button @click="selectedImage = null" class="close-button">
         <svg
@@ -63,8 +67,11 @@
 <script setup>
 import { ref } from 'vue'
 import { ElEmpty, ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 
 import { getImageUrl } from '@/common/util'
+
+const { t } = useI18n()
 
 const props = defineProps({ images: { type: Array, required: true } })
 
@@ -96,7 +103,7 @@ const handleImageLoad = () => {
 // 处理图片加载失败
 const handleImageError = () => {
   isLoading.value = false
-  ElMessage.error('图片加载失败')
+  ElMessage.error(t('modelInterpreterViewer.imageLoadError'))
 }
 </script>
 

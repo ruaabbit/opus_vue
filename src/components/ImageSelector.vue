@@ -8,7 +8,7 @@
       @mouseup="endSelection"
       @mouseleave="endSelection"
     >
-      <img :src="imageSrc" alt="Selectable Image" draggable="false" />
+      <img :src="imageSrc" :alt="$t('imageSelector.altText')" draggable="false" />
       <div
         v-if="isSelecting"
         class="selection"
@@ -32,25 +32,32 @@
     </div>
     <div class="selection-info-container" v-if="lastSelection.isVisible">
       <div class="selection-info">
-        <p>最后选择区域尺寸:</p>
-        <p>宽度: {{ Math.round(lastSelection.width) }}px</p>
-        <p>高度: {{ Math.round(lastSelection.height) }}px</p>
-        <p>角坐标:</p>
-        <p>左上: ({{ Math.round(lastSelection.left) }}, {{ Math.round(lastSelection.top) }})</p>
+        <p>{{ $t('imageSelector.lastSelectionSize') }}</p>
+        <p>{{ $t('imageSelector.width') }}: {{ Math.round(lastSelection.width) }}px</p>
+        <p>{{ $t('imageSelector.height') }}: {{ Math.round(lastSelection.height) }}px</p>
+        <p>{{ $t('imageSelector.cornerCoordinates') }}</p>
         <p>
-          右上: ({{ Math.round(lastSelection.left + lastSelection.width) }},
+          {{ $t('imageSelector.topLeft') }}: ({{ Math.round(lastSelection.left) }},
           {{ Math.round(lastSelection.top) }})
         </p>
         <p>
-          左下: ({{ Math.round(lastSelection.left) }},
+          {{ $t('imageSelector.topRight') }}: ({{
+            Math.round(lastSelection.left + lastSelection.width)
+          }}, {{ Math.round(lastSelection.top) }})
+        </p>
+        <p>
+          {{ $t('imageSelector.bottomLeft') }}: ({{ Math.round(lastSelection.left) }},
           {{ Math.round(lastSelection.top + lastSelection.height) }})
         </p>
         <p>
-          右下: ({{ Math.round(lastSelection.left + lastSelection.width) }},
-          {{ Math.round(lastSelection.top + lastSelection.height) }})
+          {{ $t('imageSelector.bottomRight') }}: ({{
+            Math.round(lastSelection.left + lastSelection.width)
+          }}, {{ Math.round(lastSelection.top + lastSelection.height) }})
         </p>
       </div>
-      <button class="clear-button" @click="clearSelection">清除选择</button>
+      <button class="clear-button" @click="clearSelection">
+        {{ $t('imageSelector.clearSelection') }}
+      </button>
     </div>
   </div>
 </template>

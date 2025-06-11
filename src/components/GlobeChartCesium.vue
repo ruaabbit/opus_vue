@@ -7,12 +7,12 @@
         <div class="drag-handle">☰</div>
       </div>
       <div v-if="isPreloading || isFading" class="loading-indicator">
-        {{ isPreloading ? '图片加载中...' : isFading ? '切换中...' : '' }}
+        {{ isPreloading ? $t('globe.loading') : isFading ? $t('globe.switching') : '' }}
       </div>
       <div class="date-display">{{ currentDate }}</div>
       <div class="playback-controls">
         <button @click="togglePlayback" :disabled="isPreloading || !imagesLoaded">
-          {{ isPlaying ? '暂停' : '播放' }}
+          {{ isPlaying ? $t('globe.pause') : $t('globe.play') }}
         </button>
         <input
           type="range"
@@ -22,7 +22,7 @@
           v-model.number="playbackInterval"
           :disabled="isPreloading || !imagesLoaded"
         />
-        <span>间隔: {{ playbackInterval.toFixed(1) }} 秒</span>
+        <span>{{ $t('globe.interval') }}: {{ playbackInterval.toFixed(1) }} {{ $t('globe.seconds') }}</span>
       </div>
     </div>
   </el-row>

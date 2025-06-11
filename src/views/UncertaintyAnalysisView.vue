@@ -1,8 +1,14 @@
 <template>
   <div class="uncertainty-container">
-    <div class="developing-message">正在开发中</div>
+    <div class="developing-message">{{ $t('common.developing') }}</div>
   </div>
 </template>
+
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+useI18n()
+</script>
 
 <style scoped>
 .uncertainty-container {

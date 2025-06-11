@@ -8,13 +8,13 @@
       </div>
       <img
         :src="getImageUrl(currentImage.path)"
-        alt="Arctic Sea Ice Prediction"
+        :alt="$t('arcticSeaIceViewer.altText')"
         class="image"
         @click="viewImage(currentImage)"
         @mouseover="showTooltip = true"
         @mouseleave="showTooltip = false"
       />
-      <div v-if="showTooltip" class="tooltip">点击图片可以放大查看</div>
+      <div v-if="showTooltip" class="tooltip">{{ $t('arcticSeaIceViewer.tooltipText') }}</div>
     </div>
 
     <div class="button-grid">
@@ -24,10 +24,10 @@
         :class="{ 'button-disabled': currentImageIndex === 0 }"
         :disabled="currentImageIndex === 0"
       >
-        上一张
+        {{ $t('arcticSeaIceViewer.prevImage') }}
       </button>
       <button @click="togglePause" class="button">
-        {{ isPaused ? '点击继续' : '点击暂停' }}
+        {{ isPaused ? $t('arcticSeaIceViewer.resume') : $t('arcticSeaIceViewer.pause') }}
       </button>
       <button
         @click="nextImage"
@@ -35,7 +35,7 @@
         :class="{ 'button-disabled': !images?.length || currentImageIndex === images.length - 1 }"
         :disabled="!images?.length || currentImageIndex === images.length - 1"
       >
-        下一张
+        {{ $t('arcticSeaIceViewer.nextImage') }}
       </button>
     </div>
 
@@ -49,7 +49,9 @@
         v-model="interval"
         class="slider"
       />
-      <label for="intervalRange" class="slider-label">图片播放速度: {{ interval }}s</label>
+      <label for="intervalRange" class="slider-label">{{
+        $t('arcticSeaIceViewer.playbackSpeed', { interval: interval })
+      }}</label>
     </div>
 
     <div
