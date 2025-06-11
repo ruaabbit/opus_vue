@@ -22,7 +22,10 @@
           v-model.number="playbackInterval"
           :disabled="isPreloading || !imagesLoaded"
         />
-        <span>{{ $t('globe.interval') }}: {{ playbackInterval.toFixed(1) }} {{ $t('globe.seconds') }}</span>
+        <span
+          >{{ $t('globe.interval') }}: {{ playbackInterval.toFixed(1) }}
+          {{ $t('globe.seconds') }}</span
+        >
       </div>
     </div>
   </el-row>
@@ -97,7 +100,9 @@ const props = defineProps({
 
 // 状态管理
 let viewer = null
-let imageryLayers = []
+// imageryLayers 将不再直接存储 Cesium.ImageryLayer 实例数组，
+// 而是通过 activeCesiumLayers 按需管理
+const activeCesiumLayers = ref({}) // 用于存储当前激活的 Cesium 图层实例 { index: CesiumLayer }
 const currentIndex = ref(0)
 const isPlaying = ref(true)
 const playbackInterval = ref(2)
@@ -159,28 +164,51 @@ const initCesium = () => {
   createImageryLayers()
 }
 
-// 创建图层
+// 创建图层 - 此函数现在主要负责清理旧的 activeCesiumLayers
 const createImageryLayers = () => {
-  // 清除现有图层
-  imageryLayers.forEach((layer) => {
-    viewer.imageryLayers.remove(layer)
+  // 清除所有当前激活的 Cesium 图层
+  Object.keys(activeCesiumLayers.value).forEach((key) => {
+    removeLayerFromViewer(parseInt(key, 10))
   })
-  imageryLayers = []
+  activeCesiumLayers.value = {} // 重置
 
-  // 为每个图像创建新图层
-  props.images.forEach((imageData) => {
-    const layer = viewer.imageryLayers.addImageryProvider(
-      new Cesium.SingleTileImageryProvider({
+  // 预加载图像（如果 props.images 有数据）
+  if (props.images && props.images.length > 0) {
+    preloadImages(props.images)
+  } else {
+    imagesLoaded.value = true
+    isPreloading.value = false
+  }
+}
+
+// 辅助函数：确保图层已添加到viewer
+const ensureLayerIsAdded = (index) => {
+  if (!viewer || !props.images[index]) return null
+  if (!activeCesiumLayers.value[index]) {
+    const imageData = props.images[index]
+    try {
+      const provider = new Cesium.SingleTileImageryProvider({
         url: 'https://seaice.52lxy.one:20443' + imageData.path
       })
-    )
-    layer.show = false
-    layer.alpha = 0
-    imageryLayers.push(layer)
-  })
+      const layer = viewer.imageryLayers.addImageryProvider(provider)
+      layer.alpha = 0 // 初始透明，用于淡入
+      layer.show = false // 初始隐藏，由淡入逻辑控制显示
+      activeCesiumLayers.value[index] = layer
+      return layer
+    } catch (error) {
+      console.error(`Error creating imagery provider for index ${index}:`, error)
+      return null
+    }
+  }
+  return activeCesiumLayers.value[index]
+}
 
-  // 预加载图像
-  preloadImages(props.images)
+// 辅助函数：从viewer移除图层
+const removeLayerFromViewer = (index) => {
+  if (activeCesiumLayers.value[index]) {
+    viewer.imageryLayers.remove(activeCesiumLayers.value[index], true) // true to destroy
+    delete activeCesiumLayers.value[index]
+  }
 }
 
 // 预加载图像
@@ -200,14 +228,14 @@ const preloadImages = async (imageList) => {
       const img = new Image()
       if (!imgData || !imgData.path) {
         console.warn('Image data or path missing:', imgData)
-        resolve()
+        resolve() // Resolve even if data is missing to not block Promise.all
         return
       }
       const imgUrl = 'https://seaice.52lxy.one:20443' + imgData.path
       img.onload = () => resolve(imgUrl)
       img.onerror = () => {
         console.error(`Failed to load image: ${imgUrl}`)
-        resolve()
+        resolve() // Resolve on error to not block Promise.all
       }
       img.src = imgUrl
     })
@@ -216,19 +244,22 @@ const preloadImages = async (imageList) => {
   try {
     await Promise.all(promises)
     console.log('All images preloaded (or attempted).')
-
-    // Ensure synchronous execution of state updates
     imagesLoaded.value = true
-    if (imageryLayers.length > 0) {
-      imageryLayers[currentIndex.value].show = true
-      imageryLayers[currentIndex.value].alpha = 1.0
+
+    // 预加载完成后，仅加载并显示当前索引的图层
+    if (props.images.length > 0) {
+      const currentLayer = ensureLayerIsAdded(currentIndex.value)
+      if (currentLayer) {
+        currentLayer.show = true
+        currentLayer.alpha = 1.0
+      }
       if (isPlaying.value) {
         startPlayback()
       }
     }
   } catch (error) {
     console.error('Error during image preloading:', error)
-    imagesLoaded.value = false
+    imagesLoaded.value = false // Keep false if any critical error occurred
   } finally {
     isPreloading.value = false
   }
@@ -236,30 +267,40 @@ const preloadImages = async (imageList) => {
 
 // 图层淡入淡出过渡动画
 const crossFadeLayers = (oldIndex, newIndex) => {
-  if (isFading.value) {
+  if (isFading.value && oldIndex !== newIndex) {
+    // Allow fading to itself if needed for reset
     clearInterval(fadeTimer)
   }
 
   isFading.value = true
-  const oldLayer = imageryLayers[oldIndex]
-  const newLayer = imageryLayers[newIndex]
 
-  if (!oldLayer || !newLayer) {
-    console.error('Cannot perform fade: Layer not found.')
-    isFading.value = false
-    if (newLayer) {
-      newLayer.show = true
-      newLayer.alpha = 1.0
-    }
+  const oldLayer = activeCesiumLayers.value[oldIndex]
+  // 确保新图层已创建并添加到viewer
+  const newLayer = ensureLayerIsAdded(newIndex)
+
+  if (!newLayer) {
+    console.error(
+      `Cannot perform fade: New layer at index ${newIndex} could not be created or found.`
+    )
     if (oldLayer) {
-      oldLayer.show = false
-      oldLayer.alpha = 0
+      // If new layer fails, try to keep old layer visible if it exists
+      oldLayer.show = true
+      oldLayer.alpha = 1.0
     }
+    isFading.value = false
     return
   }
 
-  newLayer.alpha = 0
-  newLayer.show = true
+  // 如果旧图层和新图层是同一个（例如，只有一个图像时），则直接设置为完全可见
+  if (oldLayer === newLayer) {
+    newLayer.show = true
+    newLayer.alpha = 1.0
+    isFading.value = false
+    return
+  }
+
+  newLayer.alpha = 0 // 确保新图层开始时透明
+  newLayer.show = true // 使新图层可见以进行淡入
 
   let currentStep = 0
   const alphaIncrement = 1.0 / fadeSteps
@@ -268,19 +309,21 @@ const crossFadeLayers = (oldIndex, newIndex) => {
   fadeTimer = setInterval(() => {
     currentStep++
     const newAlpha = Math.min(1.0, currentStep * alphaIncrement)
-    const oldAlpha = Math.max(0.0, 1.0 - newAlpha)
+    const oldAlpha = oldLayer ? Math.max(0.0, 1.0 - newAlpha) : 0 // oldLayer可能不存在
 
     newLayer.alpha = newAlpha
-    if (oldLayer !== newLayer) {
+    if (oldLayer) {
       oldLayer.alpha = oldAlpha
     }
 
     if (currentStep >= fadeSteps) {
       clearInterval(fadeTimer)
       newLayer.alpha = 1.0
-      if (oldLayer !== newLayer) {
+      if (oldLayer) {
         oldLayer.alpha = 0.0
         oldLayer.show = false
+        // 从 viewer 中移除旧图层
+        removeLayerFromViewer(oldIndex)
       }
       isFading.value = false
     }
@@ -293,8 +336,8 @@ const nextImage = () => {
     return
   }
 
-  // If currently fading, skip this transition
-  if (isFading.value) {
+  if (isFading.value && props.images.length > 1) {
+    // 只有一个图层时不应阻止
     return
   }
 
@@ -305,11 +348,16 @@ const nextImage = () => {
   if (useSmooth) {
     crossFadeLayers(oldIndex, newIndex)
   } else {
-    // Instant transition
-    imageryLayers[oldIndex].show = false
-    imageryLayers[oldIndex].alpha = 0.0
-    imageryLayers[newIndex].show = true
-    imageryLayers[newIndex].alpha = 1.0
+    // 移除旧图层（如果存在且不同于新图层）
+    if (oldIndex !== newIndex && activeCesiumLayers.value[oldIndex]) {
+      removeLayerFromViewer(oldIndex)
+    }
+    // 添加并显示新图层
+    const newLayer = ensureLayerIsAdded(newIndex)
+    if (newLayer) {
+      newLayer.show = true
+      newLayer.alpha = 1.0
+    }
   }
 }
 
@@ -319,16 +367,22 @@ const stopPlayback = () => {
     clearInterval(playbackTimer)
     playbackTimer = null
   }
-  clearInterval(fadeTimer)
+  clearInterval(fadeTimer) // 停止任何正在进行的淡入淡出
   fadeTimer = null
   isFading.value = false
 
-  // Instantly show current image and hide others
-  imageryLayers.forEach((layer, index) => {
+  // 确保只有当前索引的图层是可见的，并移除其他图层
+  Object.keys(activeCesiumLayers.value).forEach((keyStr) => {
+    const index = parseInt(keyStr, 10)
+    const layer = activeCesiumLayers.value[index]
     if (layer) {
-      const isCurrent = index === currentIndex.value
-      layer.show = isCurrent
-      layer.alpha = isCurrent ? 1.0 : 0.0
+      if (index === currentIndex.value) {
+        layer.show = true
+        layer.alpha = 1.0
+      } else {
+        // 从 viewer 中移除不活动的图层
+        removeLayerFromViewer(index)
+      }
     }
   })
 }
@@ -339,42 +393,42 @@ const startPlayback = () => {
     return
   }
 
-  stopPlayback()
+  stopPlayback() // 清理之前的状态，确保只有一个图层（当前图层）开始
 
-  // Ensure current image is visible
-  if (imageryLayers.length > 0) {
-    // Reset all layers first
-    imageryLayers.forEach((layer) => {
-      if (layer) {
-        layer.show = false
-        layer.alpha = 0.0
-      }
-    })
+  // 确保当前图层已加载并可见
+  const currentLayer = ensureLayerIsAdded(currentIndex.value)
+  if (currentLayer) {
+    currentLayer.show = true
+    currentLayer.alpha = 1.0
+  } else if (props.images.length > 0) {
+    // 如果当前图层因某种原因无法加载，则尝试停止播放以避免错误
+    console.error(`Cannot start playback: Layer ${currentIndex.value} failed to load.`)
+    isPlaying.value = false // 停止播放
+    return
+  }
 
-    // Show current layer
-    if (imageryLayers[currentIndex.value]) {
-      imageryLayers[currentIndex.value].show = true
-      imageryLayers[currentIndex.value].alpha = 1.0
-    }
+  // Calculate interval and determine transition behavior
+  const intervalMs = playbackInterval.value * 1000
+  useSmooth = intervalMs < 3000 // Update global transition mode
 
-    // Calculate interval and determine transition behavior
-    const intervalMs = playbackInterval.value * 1000
-    useSmooth = intervalMs < 3000 // Update global transition mode
-
+  if (props.images.length > 1) {
+    // 仅当有多张图片时才设置定时器
     if (useSmooth) {
-      // For faster playback, ensure smooth transitions with fade duration padding
       playbackTimer = setInterval(
         () => {
           if (!isFading.value) {
             nextImage()
           }
         },
-        Math.max(fadeDuration + 100, intervalMs)
+        Math.max(fadeDuration + 100, intervalMs) // 确保淡出有足够时间
       )
     } else {
-      // For slower playback, allow immediate transitions
       playbackTimer = setInterval(nextImage, intervalMs)
     }
+  } else if (currentLayer) {
+    // 只有一张图片，确保它显示
+    currentLayer.show = true
+    currentLayer.alpha = 1.0
   }
 }
 
@@ -403,15 +457,30 @@ watch(playbackInterval, () => {
 // 监听输入图像数组变化
 watch(
   () => props.images,
-  () => {
-    stopPlayback()
+  (newImages) => {
+    stopPlayback() // 停止当前播放并清理图层
     currentIndex.value = 0
     imagesLoaded.value = false
-    isPreloading.value = false
+    isPreloading.value = true // 准备预加载新图像
     isFading.value = false
 
-    if (viewer) {
+    // 清理所有旧的 activeCesiumLayers
+    Object.keys(activeCesiumLayers.value).forEach((key) => {
+      removeLayerFromViewer(parseInt(key, 10))
+    })
+    activeCesiumLayers.value = {}
+
+    if (viewer && newImages && newImages.length > 0) {
+      // createImageryLayers 将会调用 preloadImages
       createImageryLayers()
+    } else if (viewer) {
+      // 如果没有新图像，确保清理
+      Object.keys(activeCesiumLayers.value).forEach((key) =>
+        removeLayerFromViewer(parseInt(key, 10))
+      )
+      activeCesiumLayers.value = {}
+      imagesLoaded.value = true // 没有图像可加载
+      isPreloading.value = false
     }
   },
   { deep: true }
@@ -453,7 +522,14 @@ onUnmounted(() => {
     viewer.destroy()
     viewer = null
   }
-  imageryLayers = []
+  // 清理 activeCesiumLayers 中的所有 Cesium 实例
+  Object.keys(activeCesiumLayers.value).forEach((key) => {
+    // viewer 可能已经销毁，所以这里不需要 viewer.imageryLayers.remove
+    // Cesium 的 destroy 会处理它包含的图层
+    // 但我们仍需清空 activeCesiumLayers 引用
+    delete activeCesiumLayers.value[key]
+  })
+  activeCesiumLayers.value = {}
 })
 </script>
 
