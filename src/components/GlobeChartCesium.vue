@@ -138,10 +138,18 @@ const initCesium = () => {
     fullscreenButton: false,
     creditContainer: document.createElement('div'), // 隐藏版权信息
     terrainProvider: undefined,
-    imageryProvider: false
+    imageryProvider: false,
+    requestRenderMode: true, // 开启按需渲染
+    maximumRenderTimeChange: Infinity, // 配合 requestRenderMode
+    targetFrameRate: 30 // 可以尝试设置目标帧率
+    // resolutionScale: 0.5, // 降低渲染分辨率，会影响清晰度，谨慎使用
   }
 
   viewer = new Cesium.Viewer('cesiumContainer', options)
+  viewer.scene.fxaa = false // 禁用FXAA抗锯齿
+  viewer.scene.postProcessStages.fxaa.enabled = false // 确保后处理FXAA也禁用
+  viewer.scene.logarithmicDepthBuffer = false // 在某些情况下可以关闭以提高性能，但可能导致深度问题
+  viewer.scene.globe.depthTestAgainstTerrain = false // 如果不需要精确的地形遮挡测试，可以关闭
 
   // 设置北极视角
   viewer.camera.flyTo({
@@ -162,6 +170,7 @@ const initCesium = () => {
 
   // 创建时序图层
   createImageryLayers()
+  requestRender() // 初始化后请求一次渲染
 }
 
 // 创建图层 - 此函数现在主要负责清理旧的 activeCesiumLayers
@@ -178,6 +187,14 @@ const createImageryLayers = () => {
   } else {
     imagesLoaded.value = true
     isPreloading.value = false
+    requestRender()
+  }
+}
+
+// 辅助函数：请求Cesium场景重新渲染
+const requestRender = () => {
+  if (viewer && viewer.scene.requestRenderMode) {
+    viewer.scene.requestRender()
   }
 }
 
@@ -252,6 +269,7 @@ const preloadImages = async (imageList) => {
       if (currentLayer) {
         currentLayer.show = true
         currentLayer.alpha = 1.0
+        requestRender() // 初始图层显示后请求渲染
       }
       if (isPlaying.value) {
         startPlayback()
@@ -296,11 +314,13 @@ const crossFadeLayers = (oldIndex, newIndex) => {
     newLayer.show = true
     newLayer.alpha = 1.0
     isFading.value = false
+    requestRender()
     return
   }
 
   newLayer.alpha = 0 // 确保新图层开始时透明
   newLayer.show = true // 使新图层可见以进行淡入
+  requestRender() // 新图层准备好后，请求渲染开始淡入过程
 
   let currentStep = 0
   const alphaIncrement = 1.0 / fadeSteps
@@ -315,6 +335,7 @@ const crossFadeLayers = (oldIndex, newIndex) => {
     if (oldLayer) {
       oldLayer.alpha = oldAlpha
     }
+    requestRender() // 动画的每一步都请求渲染
 
     if (currentStep >= fadeSteps) {
       clearInterval(fadeTimer)
@@ -323,9 +344,10 @@ const crossFadeLayers = (oldIndex, newIndex) => {
         oldLayer.alpha = 0.0
         oldLayer.show = false
         // 从 viewer 中移除旧图层
-        removeLayerFromViewer(oldIndex)
+        removeLayerFromViewer(oldIndex) // 移除图层后也会触发Cesium内部更新，但显式请求确保
       }
       isFading.value = false
+      requestRender() // 淡入淡出结束后请求渲染
     }
   }, stepDuration)
 }
@@ -357,6 +379,7 @@ const nextImage = () => {
     if (newLayer) {
       newLayer.show = true
       newLayer.alpha = 1.0
+      requestRender() // 非平滑切换后请求渲染
     }
   }
 }
@@ -385,6 +408,7 @@ const stopPlayback = () => {
       }
     }
   })
+  requestRender() // 停止播放并整理图层后请求渲染
 }
 
 // 开始播放
@@ -400,6 +424,7 @@ const startPlayback = () => {
   if (currentLayer) {
     currentLayer.show = true
     currentLayer.alpha = 1.0
+    requestRender() // 确保当前图层显示后请求渲染
   } else if (props.images.length > 0) {
     // 如果当前图层因某种原因无法加载，则尝试停止播放以避免错误
     console.error(`Cannot start playback: Layer ${currentIndex.value} failed to load.`)
@@ -429,6 +454,7 @@ const startPlayback = () => {
     // 只有一张图片，确保它显示
     currentLayer.show = true
     currentLayer.alpha = 1.0
+    requestRender() // 只有一张图片时，确保其显示并请求渲染
   }
 }
 
