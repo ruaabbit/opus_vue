@@ -6,8 +6,10 @@
       <div class="controls-header">
         <div class="drag-handle">☰</div>
       </div>
-      <div v-if="isPreloading || isFading" class="loading-indicator">
-        {{ isPreloading ? $t('globe.loading') : isFading ? $t('globe.switching') : '' }}
+      <div class="loading-indicator">
+        <span v-if="isPreloading || isFading" class="loading-text">
+          {{ isPreloading ? $t('globe.loading') : isFading ? $t('globe.switching') : '' }}
+        </span>
       </div>
       <div class="date-display">{{ currentDate }}</div>
       <div class="playback-controls">
@@ -285,9 +287,28 @@ const preloadImages = async (imageList) => {
 
 // 图层淡入淡出过渡动画
 const crossFadeLayers = (oldIndex, newIndex) => {
-  if (isFading.value && oldIndex !== newIndex) {
-    // Allow fading to itself if needed for reset
+  // 如果正在进行动画，先完成当前动画
+  if (isFading.value && fadeTimer) {
     clearInterval(fadeTimer)
+    fadeTimer = null
+
+    // 立即完成当前动画状态
+    Object.keys(activeCesiumLayers.value).forEach((key) => {
+      const index = parseInt(key, 10)
+      const layer = activeCesiumLayers.value[index]
+      if (layer && index !== currentIndex.value) {
+        layer.alpha = 0.0
+        layer.show = false
+        removeLayerFromViewer(index)
+      }
+    })
+
+    // 确保当前图层完全可见
+    const currentLayer = activeCesiumLayers.value[currentIndex.value]
+    if (currentLayer) {
+      currentLayer.alpha = 1.0
+      currentLayer.show = true
+    }
   }
 
   isFading.value = true
@@ -339,6 +360,7 @@ const crossFadeLayers = (oldIndex, newIndex) => {
 
     if (currentStep >= fadeSteps) {
       clearInterval(fadeTimer)
+      fadeTimer = null
       newLayer.alpha = 1.0
       if (oldLayer) {
         oldLayer.alpha = 0.0
@@ -355,11 +377,6 @@ const crossFadeLayers = (oldIndex, newIndex) => {
 // 切换到下一张图像
 const nextImage = () => {
   if (props.images.length === 0 || !imagesLoaded.value) {
-    return
-  }
-
-  if (isFading.value && props.images.length > 1) {
-    // 只有一个图层时不应阻止
     return
   }
 
@@ -434,19 +451,14 @@ const startPlayback = () => {
 
   // Calculate interval and determine transition behavior
   const intervalMs = playbackInterval.value * 1000
-  useSmooth = intervalMs < 3000 // Update global transition mode
+  // 调整平滑过渡的阈值，当间隔太短时禁用平滑过渡以避免动画冲突
+  useSmooth = intervalMs >= fadeDuration + 200 // 确保有足够时间完成动画
 
   if (props.images.length > 1) {
     // 仅当有多张图片时才设置定时器
     if (useSmooth) {
-      playbackTimer = setInterval(
-        () => {
-          if (!isFading.value) {
-            nextImage()
-          }
-        },
-        Math.max(fadeDuration + 100, intervalMs) // 确保淡出有足够时间
-      )
+      // 使用实际的用户设置间隔，不再强制最小值
+      playbackTimer = setInterval(nextImage, intervalMs)
     } else {
       playbackTimer = setInterval(nextImage, intervalMs)
     }
@@ -619,6 +631,18 @@ onUnmounted(() => {
   margin-bottom: 8px;
   color: #ffcc00;
   min-height: 1.2em;
+  height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.loading-text {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+  position: absolute;
+  white-space: nowrap;
 }
 
 .date-display {
