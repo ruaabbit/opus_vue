@@ -107,7 +107,9 @@
           <el-icon v-if="!isLoading">
             <DataAnalysis />
           </el-icon>
-          <span>{{ isLoading ? $t('imageUpload.analyzing') : $t('imageUpload.submitAnalysis') }}</span>
+          <span>{{
+            isLoading ? $t('imageUpload.analyzing') : $t('imageUpload.submitAnalysis')
+          }}</span>
         </el-button>
       </div>
     </div>
@@ -130,7 +132,13 @@
     </div>
 
     <!-- 图片预览对话框 -->
-    <el-dialog v-model="dialogVisible" :title="$t('imageUpload.imagePreview')" width="50%" center destroy-on-close>
+    <el-dialog
+      v-model="dialogVisible"
+      :title="$t('imageUpload.imagePreview')"
+      width="50%"
+      center
+      destroy-on-close
+    >
       <div class="preview-container">
         <img class="preview-image" :src="dialogImageUrl" alt="Preview Image" />
       </div>
@@ -317,7 +325,9 @@ const handleRemove = (uploadFile) => {
       uploadedPaths.value.push(null)
     }
   }
-  ElMessage.warning(t('imageUpload.needMoreImages', { count: props.imageLimit - fileList.value.length }))
+  ElMessage.warning(
+    t('imageUpload.needMoreImages', { count: props.imageLimit - fileList.value.length })
+  )
 }
 
 // 轮询获取预测结果
@@ -506,6 +516,8 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
+  color: #606266;
+  font-weight: 500;
 }
 
 .progress-text .complete {
@@ -514,7 +526,7 @@ onMounted(() => {
 }
 
 .hint-text {
-  color: #909399;
+  color: #606266;
   font-size: 14px;
   margin-top: 8px;
 }
@@ -538,7 +550,7 @@ onMounted(() => {
 
 .date-hint {
   margin-top: 8px;
-  color: #909399;
+  color: #606266;
   font-size: 13px;
 }
 
@@ -554,7 +566,7 @@ onMounted(() => {
 }
 
 .upload-hint {
-  color: #909399;
+  color: #606266;
   font-size: 12px;
   margin-top: 4px;
 }
