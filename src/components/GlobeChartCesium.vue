@@ -526,31 +526,19 @@ watch(
 
 // 组件挂载时初始化
 onMounted(async () => {
-  // 加载 Cesium CSS
-  const link = document.createElement('link')
-  link.rel = 'stylesheet'
-  link.href = '/seaice/Cesium/Widgets/widgets.css'
-  document.head.appendChild(link)
-
-  // 动态引入 Cesium
-  const script = document.createElement('script')
-  script.src = '/seaice/Cesium/Cesium.js'
-  script.onload = () => {
-    // 确保Cesium对象可用
-    Cesium = window.Cesium
-    if (Cesium) {
-      initCesium()
-      if (props.images && props.images.length > 0) {
-        preloadImages(props.images)
-      } else {
-        imagesLoaded.value = true
-        isPreloading.value = false
-      }
+  // Cesium 现在通过 CDN 加载，直接可用
+  Cesium = window.Cesium
+  if (Cesium) {
+    initCesium()
+    if (props.images && props.images.length > 0) {
+      preloadImages(props.images)
     } else {
-      console.error('Failed to load Cesium')
+      imagesLoaded.value = true
+      isPreloading.value = false
     }
+  } else {
+    console.error('Cesium not available - please check CDN loading')
   }
-  document.head.appendChild(script)
 })
 
 // 组件卸载时清理资源
