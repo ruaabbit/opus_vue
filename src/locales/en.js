@@ -1,12 +1,12 @@
 export default {
   // Application title and navigation
   app: {
-    title: 'MetaICE: Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting',
+    title: 'Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting',
     subtitle:
-      'MetaICE: Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting',
+      'Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting',
     aboutUs: 'About Us',
     copyright:
-      'OUC AI GROUP 2025 Copyright by Institute of Artificial Intelligence, Ocean University of China'
+      'OUC AI Lab 2025 Copyright by Institute of Artificial Intelligence, Ocean University of China'
   },
 
   // Menu items

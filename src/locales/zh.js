@@ -1,11 +1,11 @@
 export default {
   // 应用标题和导航
   app: {
-    title: '北极海冰时空多尺度预报基础模型 MetaICE',
+    title: '“寒冰”北极海冰时空多尺度预报基础模型',
     subtitle:
-      'MetaICE: Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting',
+      'Foundation Model for Arctic Sea Ice Spatio-Temporal Multi-Scale Forecasting',
     aboutUs: '关于我们',
-    copyright: 'OUC AI GROUP 2025 Copyright by 中国海洋大学人工智能研究院'
+    copyright: 'OUC AI Lab 2025 Copyright by 中国海洋大学人工智能研究院'
   },
 
   // 菜单项

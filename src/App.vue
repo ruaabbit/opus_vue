@@ -6,7 +6,7 @@
         <div class="sidebar-container">
           <div class="logo-container">
             <img src="@/assets/logo_01.svg" class="logo-image" alt="OUC AI GROUP" />
-            <strong class="logo-text">OUC AI GROUP</strong>
+            <strong class="logo-text">OUC AI Lab</strong>
           </div>
 
           <el-menu
