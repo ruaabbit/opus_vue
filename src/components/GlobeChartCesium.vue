@@ -13,7 +13,7 @@
       </div>
       <div class="date-display">{{ currentDate }}</div>
       <div class="playback-controls">
-        <button @click="togglePlayback" :disabled="isPreloading || !imagesLoaded">
+        <button @click="togglePlayback" :disabled="isPreloading || !imagesLoaded || props.images.length === 0">
           {{ isPlaying ? $t('globe.pause') : $t('globe.play') }}
         </button>
         <input
@@ -22,9 +22,9 @@
           max="10"
           step="0.5"
           v-model.number="playbackInterval"
-          :disabled="isPreloading || !imagesLoaded"
+          :disabled="isPreloading || !imagesLoaded || props.images.length === 0"
         />
-        <span
+        <span v-if="props.images.length > 0"
           >{{ $t('globe.interval') }}: {{ playbackInterval.toFixed(1) }}
           {{ $t('globe.seconds') }}</span
         >
@@ -101,6 +101,10 @@ const props = defineProps({
   backgroundImage: {
     type: String,
     default: '/picture/sea_ice_map.webp'
+  },
+  backgroundTilingScheme: {
+    type: Object,
+    default: null
   }
 })
 
@@ -144,7 +148,7 @@ const initCesium = () => {
     fullscreenButton: false,
     creditContainer: document.createElement('div'), // 隐藏版权信息
     terrainProvider: undefined,
-    imageryProvider: false,
+    imageryProvider: false
     // requestRenderMode: true, // 开启按需渲染
     // maximumRenderTimeChange: Infinity, // 配合 requestRenderMode
     // targetFrameRate: 30 // 可以尝试设置目标帧率
@@ -170,7 +174,8 @@ const initCesium = () => {
   // 添加基础海冰背景图
   viewer.imageryLayers.addImageryProvider(
     new Cesium.SingleTileImageryProvider({
-      url: props.backgroundImage
+      url: props.backgroundImage,
+      tilingScheme: props.backgroundTilingScheme ? props.backgroundTilingScheme : undefined
     })
   )
 
@@ -191,7 +196,8 @@ const createImageryLayers = () => {
   if (props.images && props.images.length > 0) {
     preloadImages(props.images)
   } else {
-    imagesLoaded.value = true
+    // images 为空时只加载背景，不加载 texture
+    imagesLoaded.value = false
     isPreloading.value = false
     requestRender()
   }
@@ -207,12 +213,12 @@ const requestRender = () => {
 // 辅助函数：确保纹理已加载
 const ensureTextureIsLoaded = async (index) => {
   if (!viewer || !props.images[index]) return null
-  
+
   if (!activeTextures.value[index]) {
     const imageData = props.images[index]
     try {
       const imageUrl = 'https://seaice.52lxy.one:20443' + imageData.path
-      
+
       // 使用HTML Image对象加载图像
       const image = await new Promise((resolve, reject) => {
         const img = new Image()
@@ -221,13 +227,13 @@ const ensureTextureIsLoaded = async (index) => {
         img.onerror = (error) => reject(error)
         img.src = imageUrl
       })
-      
+
       // 创建纹理
       const texture = new Cesium.Texture({
         context: viewer.scene.context,
         source: image
       })
-      
+
       activeTextures.value[index] = texture
       return texture
     } catch (error) {
@@ -241,7 +247,7 @@ const ensureTextureIsLoaded = async (index) => {
 // 辅助函数：确保图层已添加到viewer
 const ensureLayerIsAdded = async (index) => {
   if (!viewer || !props.images[index]) return null
-  
+
   if (!activeCesiumLayers.value[index]) {
     const imageData = props.images[index]
     try {
@@ -253,7 +259,7 @@ const ensureLayerIsAdded = async (index) => {
       const provider = new Cesium.SingleTileImageryProvider({
         url: 'https://seaice.52lxy.one:20443' + imageData.path
       })
-      
+
       const layer = viewer.imageryLayers.addImageryProvider(provider)
       layer.alpha = 0 // 初始透明，用于淡入
       layer.show = false // 初始隐藏，由淡入逻辑控制显示
@@ -273,10 +279,13 @@ const removeLayerFromViewer = (index) => {
     viewer.imageryLayers.remove(activeCesiumLayers.value[index], true) // true to destroy
     delete activeCesiumLayers.value[index]
   }
-  
+
   // 清理纹理资源
   if (activeTextures.value[index]) {
-    if (activeTextures.value[index].destroy && typeof activeTextures.value[index].destroy === 'function') {
+    if (
+      activeTextures.value[index].destroy &&
+      typeof activeTextures.value[index].destroy === 'function'
+    ) {
       activeTextures.value[index].destroy()
     }
     delete activeTextures.value[index]
@@ -286,7 +295,8 @@ const removeLayerFromViewer = (index) => {
 // 预加载图像 - 使用 Cesium.Texture
 const preloadImages = async (imageList) => {
   if (!imageList || imageList.length === 0) {
-    imagesLoaded.value = true
+    // images 为空时不加载 texture
+    imagesLoaded.value = false
     isPreloading.value = false
     return
   }
@@ -300,11 +310,11 @@ const preloadImages = async (imageList) => {
       console.warn('Image data or path missing:', imgData)
       return null
     }
-    
+
     try {
       const imageUrl = 'https://seaice.52lxy.one:20443' + imgData.path
       console.log(`Loading texture ${index}: ${imageUrl}`)
-      
+
       // 使用HTML Image对象加载图像
       const image = await new Promise((resolve, reject) => {
         const img = new Image()
@@ -313,13 +323,13 @@ const preloadImages = async (imageList) => {
         img.onerror = (error) => reject(error)
         img.src = imageUrl
       })
-      
+
       // 创建纹理
       const texture = new Cesium.Texture({
         context: viewer.scene.context,
         source: image
       })
-      
+
       activeTextures.value[index] = texture
       return texture
     } catch (error) {
@@ -330,7 +340,7 @@ const preloadImages = async (imageList) => {
 
   try {
     const textures = await Promise.all(promises)
-    const loadedCount = textures.filter(t => t !== null).length
+    const loadedCount = textures.filter((t) => t !== null).length
     console.log(`Textures preloaded: ${loadedCount}/${imageList.length}`)
     imagesLoaded.value = loadedCount > 0
 
@@ -383,7 +393,7 @@ const crossFadeLayers = async (oldIndex, newIndex) => {
   isFading.value = true
 
   const oldLayer = activeCesiumLayers.value[oldIndex]
-  
+
   // 确保新纹理已加载
   const newTexture = await ensureTextureIsLoaded(newIndex)
   if (!newTexture) {
@@ -399,7 +409,9 @@ const crossFadeLayers = async (oldIndex, newIndex) => {
   // 确保新图层已创建并添加到viewer
   const newLayer = await ensureLayerIsAdded(newIndex)
   if (!newLayer) {
-    console.error(`Cannot perform fade: New layer at index ${newIndex} could not be created or found.`)
+    console.error(
+      `Cannot perform fade: New layer at index ${newIndex} could not be created or found.`
+    )
     if (oldLayer) {
       oldLayer.show = true
       oldLayer.alpha = 1.0
@@ -455,6 +467,7 @@ const crossFadeLayers = async (oldIndex, newIndex) => {
 // 切换到下一张图像
 const nextImage = async () => {
   if (props.images.length === 0 || !imagesLoaded.value) {
+    // images 为空时不切换
     return
   }
 
@@ -511,6 +524,7 @@ const stopPlayback = () => {
 // 开始播放
 const startPlayback = async () => {
   if (!imagesLoaded.value || !isPlaying.value || props.images.length === 0) {
+    // images 为空时不播放
     return
   }
 
@@ -627,7 +641,7 @@ onMounted(async () => {
 // 组件卸载时清理资源
 onUnmounted(() => {
   stopPlayback()
-  
+
   // 清理所有纹理资源
   Object.keys(activeTextures.value).forEach((key) => {
     const texture = activeTextures.value[key]
@@ -637,7 +651,7 @@ onUnmounted(() => {
     delete activeTextures.value[key]
   })
   activeTextures.value = {}
-  
+
   // 清理 activeCesiumLayers 中的所有 Cesium 实例
   Object.keys(activeCesiumLayers.value).forEach((key) => {
     // viewer 可能已经销毁，所以这里不需要 viewer.imageryLayers.remove
@@ -646,7 +660,7 @@ onUnmounted(() => {
     delete activeCesiumLayers.value[key]
   })
   activeCesiumLayers.value = {}
-  
+
   if (viewer) {
     viewer.destroy()
     viewer = null

@@ -11,20 +11,66 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRealtimeMonthPrediction } from '@/common/api'
+// import { useRealtimeMonthPrediction } from '@/common/api'
 import LoadingAnimation from '../components/LoadingAnimation.vue'
 import GlobeChartCesium from '../components/GlobeChartCesium.vue'
 
 const images = ref([])
 const isLoading = ref(true)
-const backgroundImage = '/picture/sea_ice_map.webp'
+const backgroundImage = '/seaice/picture/sea_ice_visualization_background.png'
 
 onMounted(async () => {
   try {
-    const data = await useRealtimeMonthPrediction()
-    if (data.success && data.data.images) {
-      images.value = data.data.images
-    }
+    images.value = [
+      {
+        path: '/media/temp/sea_ice_visualization_20240815.png',
+        date: '2025-08'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20240915.png',
+        date: '2025-09'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20241015.png',
+        date: '2025-10'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20241115.png',
+        date: '2025-11'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20241215.png',
+        date: '2025-12'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20240115.png',
+        date: '2026-01'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20240215.png',
+        date: '2026-02'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20250315.png',
+        date: '2026-03'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20250415.png',
+        date: '2026-04'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20250515.png',
+        date: '2026-05'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20250615.png',
+        date: '2026-06'
+      },
+      {
+        path: '/media/temp/sea_ice_visualization_20250715.png',
+        date: '2026-07'
+      }
+    ]
   } catch (error) {
     console.error('Failed to load data:', error)
   } finally {
