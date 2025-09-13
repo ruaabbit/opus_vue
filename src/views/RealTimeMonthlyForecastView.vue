@@ -4,7 +4,7 @@
       <LoadingAnimation />
     </div>
     <div v-else>
-      <GlobeChartCesium :images="images" />
+      <GlobeChartCesium :images="images" :backgroundImage="backgroundImage" />
     </div>
   </div>
 </template>
@@ -17,6 +17,7 @@ import GlobeChartCesium from '../components/GlobeChartCesium.vue'
 
 const images = ref([])
 const isLoading = ref(true)
+const backgroundImage = '/picture/sea_ice_map.webp'
 
 onMounted(async () => {
   try {

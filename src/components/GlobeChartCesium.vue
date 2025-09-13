@@ -97,6 +97,10 @@ const props = defineProps({
   images: {
     type: Array,
     default: () => []
+  },
+  backgroundImage: {
+    type: String,
+    default: '/picture/sea_ice_map.webp'
   }
 })
 
@@ -166,7 +170,7 @@ const initCesium = () => {
   // 添加基础海冰背景图
   viewer.imageryLayers.addImageryProvider(
     new Cesium.SingleTileImageryProvider({
-      url: '/seaice/picture/sea_ice_map.webp'
+      url: props.backgroundImage
     })
   )
 
