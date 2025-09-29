@@ -1,5 +1,13 @@
 <template>
   <el-config-provider :locale="currentElementLocale">
+    <div class="site-maintenance-modal" role="alertdialog" aria-modal="true" aria-label="网站维护通知">
+      <div class="modal-card" tabindex="0">
+        <div class="modal-icon" aria-hidden="true">🔧</div>
+        <h2 class="modal-title">当前网站正在升级改造</h2>
+        <p class="modal-message">十月中旬会焕新上线</p>
+        <p class="modal-sub">为保证数据与体验，网站访问与部分功能将暂时受限。</p>
+      </div>
+    </div>
     <el-container class="container-full-height">
       <!-- Sider with dark theme -->
       <el-aside width="220px" class="dark-bg sidebar-overflow sidebar-transition">
@@ -362,6 +370,80 @@ const handleSelect = (key) => {
 
   .content-container {
     padding: 1rem;
+  }
+}
+
+/* 大型全屏维护弹窗 */
+.site-maintenance-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  z-index: 10000;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  padding: 24px;
+}
+
+/* 中心卡片 */
+.modal-card {
+  background: linear-gradient(180deg, #ffffff, #fffaf9);
+  color: #0b1220;
+  max-width: 920px;
+  width: min(96%, 920px);
+  border-radius: 14px;
+  padding: 42px 36px;
+  box-shadow: 0 18px 50px rgba(2,6,23,0.6);
+  text-align: center;
+  border: 3px solid rgba(255,77,79,0.12);
+  outline: none;
+}
+
+/* 图标 */
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/* 标题 */
+.modal-title {
+  font-size: 30px;
+  font-weight: 800;
+  color: #ff3b30;
+  margin: 6px 0 12px;
+}
+
+/* 主信息 */
+.modal-message {
+  font-size: 20px;
+  margin: 0 0 8px;
+  color: #0b1220;
+  font-weight: 600;
+}
+
+/* 辅助说明 */
+.modal-sub {
+  color: #6b7280;
+  font-size: 15px;
+  margin-top: 10px;
+}
+
+/* 小屏幕调整 */
+@media (max-width: 600px) {
+  .modal-card {
+    padding: 20px 16px;
+    border-radius: 10px;
+  }
+  .modal-title {
+    font-size: 20px;
+  }
+  .modal-message {
+    font-size: 16px;
+  }
+  .modal-icon {
+    font-size: 36px;
   }
 }
 </style>
